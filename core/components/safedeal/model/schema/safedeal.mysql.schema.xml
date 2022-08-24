@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model package="safedeal" baseClass="xPDOObject" platform="mysql" defaultEngine="InnoDB" phpdoc-package="safedeal"
+       version="1.1">
+
+    <object class="SafeDeal" table="safedeal" extends="xPDOSimpleObject">
+		<field key="created" dbtype="int" precision="10" phptype="integer" null="false" />
+		<field key="updated" dbtype="int" precision="10" phptype="integer" null="true" />
+		<field key="author_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+		<field key="partner_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="is_customer" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="1" />
+        <field key="is_company" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="0" />
+        <field key="company_name" dbtype="varchar" precision="191" phptype="string" null="true" />
+        <field key="fee_payer" dbtype="int" precision="1" phptype="integer" null="false" default="0" />
+        <field key="title" dbtype="varchar" precision="191" phptype="string" null="true" />
+        <field key="description" dbtype="mediumtext" phptype="string" null="true" />
+        <field key="status" dbtype="int" precision="1" phptype="integer" null="false" default="1" />
+        <field key="payment_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="payment_total" dbtype="float" phptype="float" null="false" default="0" />
+        <field key="price" dbtype="float" phptype="float" null="false" default="0" />
+        <field key="fee" dbtype="float" phptype="float" null="false" default="0" />
+		<field key="deadline" dbtype="int" precision="10" phptype="integer" null="true" />
+        <field key="hash" dbtype="varchar" precision="256" phptype="string" null="true" />
+		<field key="initiator_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="tmp_price" dbtype="float" phptype="float" null="false" default="0" />
+        <field key="tmp_fee" dbtype="float" phptype="float" null="false" default="0" />
+		<field key="tmp_deadline" dbtype="int" precision="10" phptype="integer" null="true" default="0" />
+    </object>
+
+</model>

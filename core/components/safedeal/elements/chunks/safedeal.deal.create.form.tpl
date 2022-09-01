@@ -22,11 +22,13 @@
                 <label class="custom-control-label" for="RadioIndividual" data-toggle="collapse"
                     data-target="#collapseCompanyName" aria-expanded="false">Физическое лицо</label>
             </div>
+            {*
             <div class="custom-control custom-radio-button">
                 <input type="radio" id="RadioCompany" name="is_company" class="custom-control-input" value="1">
                 <label class="custom-control-label" for="RadioCompany" data-toggle="collapse"
                     data-target="#collapseCompanyName" aria-expanded="false">Компания</label>
             </div>
+            *}
         </div>
     </div>
     <div class="collapse" id="collapseCompanyName">

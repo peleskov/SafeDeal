@@ -110,10 +110,21 @@ switch ($action) {
 
         if ($scriptProperties['archive'] == 1) {
             $where[] = array('status' => '6');
-        } else {
+        } elseif (empty($stts)) {
             $where[] = array('status:!=' => '6');
+        } else {
+            $where[] = array('status:IN' => explode(',', $stts));
         }
-
+        if (!empty($date)) {
+            $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $date . ' 00:00:00');
+            $where['deadline'] = $deadline->getTimestamp();
+        }
+        if (!empty($min)) {
+            $where['price:>='] = $min;
+        }
+        if (!empty($max)) {
+            $where['price:<='] = $max;
+        }
         $q = $modx->newQuery('SafeDeal');
         $q->where($where);
         $total = $modx->getCount('SafeDeal', $q);
@@ -133,8 +144,10 @@ switch ($action) {
 
         $items = array();
         $idx = 0;
+        $prices = [];
         foreach ($deals as $k => $deal) {
             $idx += 1;
+            $prices[] = $deal->get('price');
             $item = array_merge(array(
                 'id' => $deal->get('id'),
                 'idx' => $idx,
@@ -149,7 +162,7 @@ switch ($action) {
                 : $pdoFetch->getChunk($tpl, $item);
         }
         if (count($items) > 0) {
-            $output = array_merge(array('wrapper' => implode($outputSeparator, $items)), $scriptProperties);
+            $output = array_merge(array('wrapper' => implode($outputSeparator, $items), 'range_price' => '[ ' . min($prices) . ',' . max($prices) . ' ]'), $scriptProperties);
             $output = empty($tplOut)
                 ? $pdoFetch->getChunk('', $items)
                 : $pdoFetch->getChunk($tplOut, $output);

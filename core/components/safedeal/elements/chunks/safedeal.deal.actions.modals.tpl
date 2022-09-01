@@ -34,6 +34,9 @@
                     'form' => 'safedeal.deal.actions.form',
                     'btn_text' => 'Оменить сделку',
                     'successModalID' => 'modalCancelSuccess',
+                    'dealResourceID' => 26,
+                    'emailTPL' => 'safedeal.deal.cancel.email',
+                    'emailSubject' => $_modx->config.site_name~': Сделка отменена!',            
                     ]}
                 </div>
             </div>
@@ -94,6 +97,9 @@
                     'btn_text' => 'Изменить сделку',
                     'successModalID' => 'modalSuccessChangeTermsDeal',
                     'errorModalID' => 'modalErrorChangeTermsDeal',
+                    'dealResourceID' => 26,
+                    'emailTPL' => 'safedeal.deal.change.email',
+                    'emailSubject' => $_modx->config.site_name~': Изменение сделки!',            
                     ]}
                 </div>
             </div>
@@ -175,6 +181,9 @@
                     'btn_text' => 'Оплатить fake',
                     'successModalID' => 'modalSuccessPayDeal',
                     'errorModalID' => 'modalErrorPayDeal',
+                    'dealResourceID' => 26,
+                    'emailTPL' => 'safedeal.deal.pay.email',
+                    'emailSubject' => $_modx->config.site_name~': Сделка оплачена!',            
                     ]}
                 </div>
             </div>
@@ -233,6 +242,7 @@
                     <label>Отчество</label>
                     <input name="middlename" type="text" class="w-100 form-control" placeholder="Введите отчество" form="dealDisputeForm" data-inputmask-regex="^[а-яА-Яa-zA-Z ]+$">
                 </div>
+                {*
                 <div class="d-flex justify-content-between mb-4">
                     <div class="col-2 form-group mb-0 px-0">
                         <label>Паспорт</label>
@@ -251,6 +261,7 @@
                     <label>Кем выдан</label>
                     <input name="passpor_issued" type="text" class="form-control" placeholder="Кем выдан" form="dealDisputeForm">
                 </div>
+                *}
                 <div class="form-group mb-4">
                     <label>Город</label>
                     <select name="city" class="custom-select2">
@@ -281,6 +292,9 @@
                     'form_id' => 'dealDisputeForm'
                     'btn_text' => 'Оспорить сделку',
                     'successModalID' => 'modalSuccessDisputeDeal',
+                    'dealResourceID' => 26,
+                    'emailTPL' => 'safedeal.deal.dispute.email',
+                    'emailSubject' => $_modx->config.site_name~': Сделка оспорена!',            
                     ]}
                 </div>
             </div>

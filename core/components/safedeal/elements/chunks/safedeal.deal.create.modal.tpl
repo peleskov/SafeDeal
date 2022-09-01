@@ -10,10 +10,12 @@
                     'snippet' => 'SafeDeal',
                     'action' => 'deal/create',
                     'form' => 'safedeal.deal.create.form',
-                    'pageDealID' => 26,
+                    'dealResourceID' => 26,
                     'successMsg' => 'Сделка успешно создана!',
                     'successModalID' => 'successSafeDealCreateModal',
                     'errorMsg' => 'Форма содержит ошибки попробуйте еще раз.',
+                    'emailTPL' => 'safedeal.deal.create.email',
+                    'emailSubject' => $_modx->config.site_name~': Создана сделка!',
                 ]}                
             </div>
         </div>

@@ -128,6 +128,9 @@
         'form' => 'safedeal.deal.actions.form',
         'btn_text' => 'Подтвердить сделку',
         'successModalID' => 'modalAcceptDealSuccess',
+        'dealResourceID' => 26,
+        'emailTPL' => 'safedeal.deal.confirm.email',
+        'emailSubject' => $_modx->config.site_name~': Сделка подтверждена!',
         ]}
     </div>
     {/if}
@@ -170,6 +173,9 @@
         'btn_text' => 'Завершить сделку',
         'successModalID' => 'modalSuccessCompleteDeal',
         'errorModalID' => 'modalErrorCompleteDeal',
+        'dealResourceID' => 26,
+        'emailTPL' => 'safedeal.deal.complete.email',
+        'emailSubject' => $_modx->config.site_name~': Сделка завершена!',
         ]}
     </div>
     {case 3, 4}
@@ -187,6 +193,9 @@
         'form' => 'safedeal.deal.actions.form',
         'btn_text' => 'Подтвердить сделку',
         'successModalID' => 'modalAcceptDealSuccess',
+        'dealResourceID' => 26,
+        'emailTPL' => 'safedeal.deal.confirm.email',
+        'emailSubject' => $_modx->config.site_name~': Сделка подтверждена!',
         ]}
     </div>
     {/if}

@@ -29,4 +29,32 @@ return [
         'file' => 'safedeal.deal.actions.form',
         'description' => '',
     ],    
+    'safedeal.deal.create.email' => [
+        'file' => 'safedeal.deal.create.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.confirm.email' => [
+        'file' => 'safedeal.deal.confirm.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.complete.email' => [
+        'file' => 'safedeal.deal.complete.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.cancel.email' => [
+        'file' => 'safedeal.deal.cancel.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.change.email' => [
+        'file' => 'safedeal.deal.change.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.pay.email' => [
+        'file' => 'safedeal.deal.pay.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.dispute.email' => [
+        'file' => 'safedeal.deal.pay.email',
+        'description' => '',
+    ],    
 ];

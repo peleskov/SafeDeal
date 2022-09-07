@@ -364,8 +364,8 @@ if (empty($errors)) {
         $modx->getService('mail', 'mail.modPHPMailer');
         foreach ($messages as $message) {
             if (array_key_exists('telegram', $message)) {
-                $token = "5380434987:AAH9dnpRU_QK4O2rte8FRl_IU-MvTVw2nYI";
-                //Получить chat_id https://api.telegram.org/bot5380434987:AAH9dnpRU_QK4O2rte8FRl_IU-MvTVw2nYI/getUpdates
+                $token = "5380434987:AAHsLZvoVMHeDgel0wEGL66T7Rb7wf38pp4";
+                //Получить chat_id https://api.telegram.org/bot5380434987:AAHsLZvoVMHeDgel0wEGL66T7Rb7wf38pp4/getUpdates
                 $chat_ids = array(
                     '5178588337',
                     '3951096',

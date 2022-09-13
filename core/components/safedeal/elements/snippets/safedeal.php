@@ -19,14 +19,15 @@ $modx->lexicon->load('formit:default');
 $messages = [];
 $errors = [];
 $data = ['service' => 'safedeal'];
+
 /* Deal status code
-    0 => 'Ожидает согласования / Новая сделка',
-    1 => 'Согласована / Не оплачена',
-    2 => 'Оплачена / В работе',
-    3 => 'Ожидает согласования / Запрос на отмену',
-    4 => 'Ожидает согласования / Запрос на изменение',
-    5 => 'Открыт спор',
-    6 => 'Завершена',
+    0 => 'Создана / Ожидает предложения партнеру',
+    1 => 'Предложена / Ожидает подтверждения партнера',
+    2 => 'Подтверждена партнером / Ожидает оплаты',
+    3 => 'Оплачена / В работе',
+    4 => 'Продление / Ожидает согласования',
+    5 => 'Завершена / Ожидает согласия заказчика',
+    6 => 'Закрыта / Ожидает выплаты исполнителю / Архив',
 */
 
 switch ($scriptProperties['action']) {
@@ -39,25 +40,10 @@ switch ($scriptProperties['action']) {
                         $errors[$key] = '';
                     }
                     break;
-                case 'is_company':
-                    if (!in_array($val, [1, 0])) {
-                        $errors[$key] = '';
-                    }
-                    break;
-                case 'company_name':
-                    if ($_POST['is_company'] == 1 && empty($val)) {
-                        $errors[$key] = $modx->lexicon('formit.field_required');
-                    }
-                    break;
-                case 'fee_payer':
-                    if (!in_array($val, [0, 1, 2])) {
-                        $errors[$key] = '';
-                    }
-                    break;
                 case 'title':
                 case 'price':
-                case 'fee_payer':
                 case 'deadline':
+                case 'description':
                     if (empty($val)) {
                         $errors[$key] = $modx->lexicon('formit.field_required');
                     }
@@ -77,26 +63,16 @@ switch ($scriptProperties['action']) {
             $hash = hash('sha256', time() . $user_id . $_POST['is_customer'] . $_POST['is_company'] . $_POST['company_name'] . $_POST['fee_payer'] . $_POST['fee_payer'] . $_POST['title'] . $_POST['description'] . $_POST['price'] . strtotime($_POST['deadline']) . rand());
             $data['hash_link'] = $modx->makeUrl($scriptProperties['dealResourceID'], '', array('d' => $hash), 'full');
             $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
-            $fee_payer = (int) $_POST['fee_payer'];
             $price = (float) str_replace(',', '', $_POST['price']);
             $fee = (float) $price * $modx->getOption('company_fee', null, 0.05, true);
-            if ($fee_payer == 1) {
-                $price = $price - $fee;
-            } elseif ($fee_payer == 2) {
-                $price = $price - $fee / 2;
-            }
             $deal = $modx->newObject('SafeDeal');
             $deal->set('created', time());
             $deal->set('updated', time());
             $deal->set('author_id', $user_id);
             $deal->set('is_customer', (int) $_POST['is_customer']);
-            $deal->set('is_company', (int) $_POST['is_company']);
-            $deal->set('company_name', strip_tags($_POST['company_name']));
-            $deal->set('fee_payer', $fee_payer);
             $deal->set('title', strip_tags($_POST['title']));
             $deal->set('description', strip_tags($_POST['description']));
             $deal->set('status', 0);
-            $deal->set('payment_id', 0);
             $deal->set('price', $price);
             $deal->set('fee', $fee);
             $deal->set('deadline', $deadline->getTimestamp());
@@ -116,34 +92,8 @@ switch ($scriptProperties['action']) {
             }
             /* Accept deal */
             if (empty($errors)) {
-                switch ($deal->get('status')) {
-                    case 0:
-                        $deal->set('status', 1);
-                        $deal->set('partner_id', $user_id);
-                        break;
-                    case 3:
-                        $deal->set('status', 6);
-                        break;
-                    case 4:
-                        $deal_cost = $deal->get('tmp_price') + $deal->get('tmp_fee');
-                        if ($deal->get('payment_total') > 0 && $deal->get('payment_total') >= $deal_cost) { // Сделка уже оплачена
-                            $deal->set('status', 2);
-                        } else {
-                            $deal->set('status', 1);
-                        }
-                        if ($deal->get('tmp_price') > 0) {
-                            $deal->set('price', $deal->get('tmp_price'));
-                            $deal->set('fee', $deal->get('tmp_fee'));
-                        }
-                        if ($deal->get('tmp_deadline') > 0) {
-                            $deal->set('deadline', $deal->get('tmp_deadline'));
-                        }
-                        $deal->set('initiator_id', 0);
-                        $deal->set('tmp_price', 0);
-                        $deal->set('tmp_fee', 0);
-                        $deal->set('tmp_deadline', 0);
-                        break;
-                }
+                $deal->set('status', 2);
+                $deal->set('partner_id', $user_id);
                 $deal->set('updated', time());
                 if (!$deal->save()) {
                     $errors['deal'] = 'Can not save a deal!';
@@ -157,6 +107,8 @@ switch ($scriptProperties['action']) {
     case 'deal/change':
         foreach ($_POST as $key => $val) {
             switch ($key) {
+                case 'title':
+                case 'description':
                 case 'price':
                 case 'deadline':
                     if (empty($val)) {
@@ -173,43 +125,112 @@ switch ($scriptProperties['action']) {
         /* Change deal */
         if (empty($errors)) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
-                if (in_array($deal->get('status'), [0, 1, 2])) {
+                if (in_array($deal->get('status'), [0, 1])) {
                     $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
-                    $fee_payer = $deal->get('fee_payer');
                     $price = (float) str_replace(',', '', $_POST['price']);
                     $fee = (float) $price * $modx->getOption('company_fee', null, 0.05, true);
-                    if ($fee_payer == 1) {
-                        $price = $price - $fee;
-                    } elseif ($fee_payer == 2) {
-                        $price = $price - $fee / 2;
-                    }
-                    if ($deal->get('status') == 0) {
-                        $deal->set('price', $price);
-                        $deal->set('fee', $fee);
-                        $deal->set('deadline', $deadline->getTimestamp());
-                    } else {
-                        $deal->set('initiator_id', $user_id);
-                        if ($price > 0 && $price != $deal->get('price')) {
-                            $deal->set('tmp_price', $price);
-                            $deal->set('tmp_fee', $fee);
-                        }
-                        if ($deadline->getTimestamp() != $deal->get('deadline')) {
-                            $deal->set('tmp_deadline', $deadline->getTimestamp());
-                        }
-                        $deal->set('status', 4);
+                    $deal->set('title', strip_tags($_POST['title']));
+                    $deal->set('description', strip_tags($_POST['description']));
+                    $deal->set('price', $price);
+                    $deal->set('fee', $fee);
+                    $deal->set('deadline', $deadline->getTimestamp());
+                    $deal->set('status', 0);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
                     }
                 } else {
                     $errors['deal'] = 'Can not change status a deal!';
-                }
-                $deal->set('updated', time());
-                if (!$deal->save()) {
-                    $errors['deal'] = 'Can not save a deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
             }
         }
         /* Change deal */
+        break;
+    case 'deal/extension/request':
+        foreach ($_POST as $key => $val) {
+            switch ($key) {
+                case 'deadline':
+                    if (empty($val)) {
+                        $errors[$key] = $modx->lexicon('formit.field_required');
+                    }
+                    break;
+            }
+        }
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+        /* Extension deal */
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
+                if ($deal->get('status') == 3) {
+                    $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
+                    $deal->set('tmp_deadline', $deadline->getTimestamp());
+                    $deal->set('status', 4);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
+                    }
+                } else {
+                    $errors['deal'] = 'Can not change status a deal!';
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        /* Extension deal */
+        break;
+    case 'deal/extension/accept':
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+        /* Extension deal */
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
+                if ($deal->get('status') == 4) {
+                    $deal->set('deadline', $deal->get('tmp_deadline'));
+                    $deal->set('status', 3);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
+                    }
+                } else {
+                    $errors['deal'] = 'Can not change status a deal!';
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        /* Extension deal */
+        break;
+    case 'deal/extension/cancel':
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+        /* Extension deal */
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
+                if ($deal->get('status') == 4) {
+                    $deal->set('status', 3);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
+                    }
+                } else {
+                    $errors['deal'] = 'Can not change status a deal!';
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        /* Extension deal */
         break;
     case 'deal/cancel':
         /* Cancel deal */
@@ -220,15 +241,15 @@ switch ($scriptProperties['action']) {
         }
         if (empty($errors)) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
-                if ($deal->get('status') == 0) {
+                if (in_array($deal->get('status'), [0, 1, 2])) {
                     $deal->set('status', 6);
+                    $deal->set('funds_withdrawn', 1);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
+                    }
                 } else {
-                    $deal->set('initiator_id', $user_id);
-                    $deal->set('status', 3);
-                }
-                $deal->set('updated', time());
-                if (!$deal->save()) {
-                    $errors['deal'] = 'Can not save a deal!';
+                    $errors['deal'] = 'Can not change status a deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
@@ -243,14 +264,14 @@ switch ($scriptProperties['action']) {
             } else {
                 $errors['user_id'] = 'User ID not found!';
             }
-            if ($deal->get('status') != 1) {
+            if ($deal->get('status') != 2) {
                 $errors['deal'] = 'Can not pay this deal!';
             }
             /* Pay deal */
             if (empty($errors)) {
                 $deal->set('payment_id', '123456789');
                 $deal->set('payment_total', $deal->get('price') + $deal->get('fee'));
-                $deal->set('status', 2);
+                $deal->set('status', 3);
                 $deal->set('updated', time());
                 if (!$deal->save()) {
                     $errors['deal'] = 'Can not save a deal!';
@@ -261,34 +282,6 @@ switch ($scriptProperties['action']) {
         }
         /* Pay deal */
         break;
-    case 'deal/dispute':
-        foreach ($_POST as $key => $val) {
-            if (empty($val)) {
-                $errors[$key] = $modx->lexicon('formit.field_required');
-            }
-        }
-        if ($user = $modx->getUser()) {
-            $user_id = $user->id;
-        } else {
-            $errors['user_id'] = 'User ID not found!';
-        }
-        if (empty($errors)) {
-            if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
-                if ($deal->get('status') != 5) {
-                    $deal->set('status', 5);
-                    $deal->set('updated', time());
-                    if (!$deal->save()) {
-                        $errors['deal'] = 'Can not save a deal!';
-                    }
-                } else {
-                    $errors['deal'] = 'Can not dispute this deal!';
-                }
-            } else {
-                $errors['deal'] = 'Deal not found!';
-            }
-        }
-
-        break;
     case 'deal/complete':
         if ($user = $modx->getUser()) {
             $user_id = $user->id;
@@ -297,14 +290,36 @@ switch ($scriptProperties['action']) {
         }
         if (empty($errors)) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
-                if ($deal->get('status') == 2) {
+                if ($deal->get('status') == 3) {
+                    $deal->set('status', 5);
+                    $deal->set('updated', time());
+                    if (!$deal->save()) {
+                        $errors['deal'] = 'Can not save a deal!';
+                    }
+                } else {
+                    $errors['deal'] = 'Can not complete this deal!';
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        break;
+    case 'deal/close':
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
+                if ($deal->get('status') == 5) {
                     $deal->set('status', 6);
                     $deal->set('updated', time());
                     if (!$deal->save()) {
                         $errors['deal'] = 'Can not save a deal!';
                     }
                 } else {
-                    $errors['deal'] = 'Can not dispute this deal!';
+                    $errors['deal'] = 'Can not complete this deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
@@ -350,7 +365,7 @@ if (empty($errors)) {
             'id' => 'Сделка (id): ' . $deal->get('id'),
             'Ссылка: ' . $deal_link,
             'author' => 'Author (id): ' . $deal->get('author_id'),
-            'partner' => 'Partner (id): ' . ($deal->get('partner_id') > 0? $deal->get('partner_id'):''),
+            'partner' => 'Partner (id): ' . ($deal->get('partner_id') > 0 ? $deal->get('partner_id') : ''),
             'action' => $action
         )
     );
@@ -358,11 +373,11 @@ if (empty($errors)) {
         $messages,
         $msg
     );
-
     if (!empty($messages)) {
         //$modx->log(1, print_r($messages, true));
         $modx->getService('mail', 'mail.modPHPMailer');
         foreach ($messages as $message) {
+            /*
             if (array_key_exists('telegram', $message)) {
                 $token = "5380434987:AAHsLZvoVMHeDgel0wEGL66T7Rb7wf38pp4";
                 //Получить chat_id https://api.telegram.org/bot5380434987:AAHsLZvoVMHeDgel0wEGL66T7Rb7wf38pp4/getUpdates
@@ -376,13 +391,14 @@ if (empty($errors)) {
                     file_get_contents("https://api.telegram.org/bot" . $token . "/sendMessage?chat_id=" . $chat_id . "&text=" . urlencode(implode(PHP_EOL, $message['telegram'])));
                 }
             }
+            */
             if (array_key_exists('email', $message)) {
                 $modx->mail->set(modMail::MAIL_FROM, $modx->getOption('site_email'));
                 $modx->mail->set(modMail::MAIL_FROM_NAME, $modx->getOption('site_name'));
-                $modx->mail->setHTML(true);
                 $modx->mail->address('to', $message['email']['to']);
                 $modx->mail->set(modMail::MAIL_SUBJECT, $message['email']['subjectEmail']);
                 $modx->mail->set(modMail::MAIL_BODY, $message['email']['messageEmail']);
+                $modx->mail->setHTML(true);
                 if (!$modx->mail->send()) {
                     $modx->log(modX::LOG_LEVEL_ERROR, 'An error occurred while trying to send the email: ' . $modx->mail->mailer->ErrorInfo);
                 }

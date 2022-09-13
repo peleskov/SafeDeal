@@ -16,12 +16,12 @@ switch ($action) {
     case 'deal/details':
         if ($hash) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $hash))) {
-                $description = '';
+                $description_html = '';
                 if ($dscrp = $deal->get('description')) {
-                    foreach (explode("\r\n", $dscrp) as $str) {
+                    foreach (explode("\n", $dscrp) as $str) {
                         $d[] = '<p>' . $str . '</p>';
                     }
-                    $description = implode(' ', $d);
+                    $description_html = implode(' ', $d);
                 }
                 $customer_name = $scriptProperties['userNotFoundMsg'];
                 $partner_name = $scriptProperties['userNotFoundMsg'];
@@ -29,27 +29,19 @@ switch ($action) {
                     $customer_id = $deal->get('author_id');
                     if ($customer = $modx->getObject('modUser', $customer_id)) {
                         $customer_prfl = $customer->getOne('Profile');
-                        if ($deal->get('is_company') == 1) {
-                            $customer_name = $deal->get('company_name') . ' (' . $customer_prfl->get('fullname') . ')';
-                        } else {
-                            $customer_name = $customer_prfl->get('fullname');
-                        }
+                        $customer_name = $customer_prfl->get('fullname');
                     }
 
-                    $partner_id = $deal->get('partner_id');
-                    if ($partner = $modx->getObject('modUser', $partner_id)) {
-                        $partner_prfl = $partner->getOne('Profile');
-                        $partner_name = $partner_prfl->get('fullname');
+                    $executor_id = $deal->get('partner_id');
+                    if ($executor = $modx->getObject('modUser', $executor_id)) {
+                        $executor_prfl = $executor->getOne('Profile');
+                        $executor_name = $executor_prfl->get('fullname');
                     }
                 } else {
-                    $partner_id = $deal->get('author_id');
-                    if ($partner = $modx->getObject('modUser', $partner_id)) {
-                        $partner_prfl = $partner->getOne('Profile');
-                        if ($deal->get('is_company') == 1) {
-                            $partner_name = $deal->get('company_name') . ' (' . $partner_prfl->get('fullname') . ')';
-                        } else {
-                            $partner_name = $partner_prfl->get('fullname');
-                        }
+                    $executor_id = $deal->get('author_id');
+                    if ($executor = $modx->getObject('modUser', $executor_id)) {
+                        $executor_prfl = $executor->getOne('Profile');
+                        $executor_name = $executor_prfl->get('fullname');
                     }
 
                     $customer_id = $deal->get('partner_id');
@@ -63,18 +55,17 @@ switch ($action) {
                     'id' => $deal->get('id'),
                     'author_id' => $deal->get('author_id'),
                     'customer_id' => $customer_id,
-                    'initiator_id' => $deal->get('initiator_id'),
+                    'executor_id' => $executor_id,
                     'customer_name' => $customer_name,
-                    'partner_name' => $partner_name,
-                    'fee_payer' => $deal->get('fee_payer'),
+                    'executor_name' => $executor_name,
                     'title' => $deal->get('title'),
-                    'description' => $description,
+                    'description' => $deal->get('description'),
+                    'description_html' => $description_html,
                     'status' => $deal->get('status'),
                     'price' => $deal->get('price'),
                     'fee' => $deal->get('fee'),
+                    'funds_withdrawn' => $deal->get('funds_withdrawn'),
                     'deadline' => $deal->get('deadline'),
-                    'tmp_price' => $deal->get('tmp_price'),
-                    'tmp_fee' => $deal->get('tmp_fee'),
                     'tmp_deadline' => $deal->get('tmp_deadline'),
                 ), $scriptProperties);
                 $items[] = empty($tpl)
@@ -110,9 +101,9 @@ switch ($action) {
 
         if ($scriptProperties['archive'] == 1) {
             $where[] = array('status' => '6');
-        } elseif (empty($stts)) {
+        } elseif ($scriptProperties['archive'] == '-1') {
             $where[] = array('status:!=' => '6');
-        } else {
+        } elseif (!empty($stts)) {
             $where[] = array('status:IN' => explode(',', $stts));
         }
         if (!empty($date)) {
@@ -148,6 +139,12 @@ switch ($action) {
         foreach ($deals as $k => $deal) {
             $idx += 1;
             $prices[] = $deal->get('price');
+            if ($deal->get('is_customer') == 1) {
+                $customer_id = $deal->get('author_id');
+            } else {
+                $customer_id = $deal->get('partner_id');
+            }
+
             $item = array_merge(array(
                 'id' => $deal->get('id'),
                 'idx' => $idx,
@@ -155,6 +152,7 @@ switch ($action) {
                 'price' => $deal->get('price'),
                 'deadline' => $deal->get('deadline'),
                 'status' => $deal->get('status'),
+                'customer_id' => $customer_id,
                 'hash' => $deal->get('hash'),
             ), $scriptProperties);
             $items[] = empty($tpl)

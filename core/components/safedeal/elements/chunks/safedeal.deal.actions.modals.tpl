@@ -1,8 +1,72 @@
-<div class="modal fade js-hidden-refresh" id="modalAcceptDealSuccess" tabindex="-1" aria-hidden="true">
+{* Изменение сделки *}
+<div class="modal fade" id="modalChangeDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Сделка успешно подтверждена!</h5>
+                <h5 class="modal-title">Изменить сделку</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-4">
+                    <label>Название сделки</label>
+                    <input type="text" class="form-control mb-1" name="title" placeholder="Введите названние сделки"
+                        value="{$title}" form="formChangeDeal">
+                </div>
+                <div class="form-group mb-4">
+                    <label>Описание</label>
+                    <textarea class="form-control" name="description" placeholder="Описание сделки"
+                        rows="4" form="formChangeDeal">{$description}</textarea>
+                </div>
+                <div class="col-6 px-0 form-group mb-2">
+                    <label>Сумма сделки</label>
+                    <div class="position-relative">
+                        <input class="form-control transfer-amount js-dealprice" name="price" type="text"
+                            data-fee="{$_modx->config.company_fee? :'0.05'}" placeholder="Введите сумму"
+                            data-inputmask="'alias': 'currency', 'placeholder': '0.00'" value="{$price}" form="formChangeDeal">
+                        <span class="ruble">₽</span>
+                    </div>
+                </div>
+                <p class="text-muted text-medium mb-4">Общая комиссия составит: <span class="js-dealfee">{$fee}</span>
+                    ₽</p>
+                <div class="col-6 px-0 form-group mb-4">
+                    <label>Срок сделки</label>
+                    <input type="text" class="w-100 datepicker today-min" name="deadline" placeholder="30/10/2022"
+                        value="{$deadline|date_format : '%d/%m/%Y'}" form="formChangeDeal">
+                </div>
+                <div class="fomr-group mb-4">
+                    <div class="custom-control custom-radio">
+                        <input type="checkbox" id="RadioAgree1" name="iagreecheck" class="custom-control-input"
+                            checked="">
+                        <label class="custom-control-label" for="RadioAgree1">Я согласен с условиями <a
+                                class="btn btn-link d-inline" href="pravovaya-informacziya.html">пользовательского
+                                соглашения</a></label>
+                    </div>
+                </div>
+                <div class="fomr-group d-flex justify-content-end mb-4">
+                    <a href="#" class="btn btn-secondary mr-3" data-dismiss="modal">Отмена</a>
+                    {'!AjaxForm'|snippet:[
+                    'snippet' => 'SafeDeal',
+                    'action' => 'deal/change',
+                    'hash' => $.get.d,
+                    'form' => 'safedeal.deal.actions.form',
+                    'form_id' => 'formChangeDeal',
+                    'btn_text' => 'Изменить сделку',
+                    'successModalID' => 'modalChangeDealSuccess',
+                    'errorModalID' => 'modalChangeDealError',
+                    'dealResourceID' => 26,
+                    'emailTPL' => 'safedeal.deal.change.email',
+                    'emailSubject' => $_modx->config.site_name~': Сделка изменена!',
+                    ]}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade js-hidden-refresh" id="modalChangeDealSuccess" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Сделка успешно изменена!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -11,17 +75,27 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade js-hidden-refresh" id="modalChangeDealError" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Сделка не может быть изменена!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+{* Изменение сделки *}
+{* Отмена сделки *}
 <div class="modal fade is-authorized" id="modalCancelDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
                 <h5 class="modal-title">Отменить сделку</h5>
-                <p class="text-left">Вы подаете заявку на отмену сделки.
-                    {$status != 0? '<br>В случае согласии Вашего партнера - сделка будет отменена.<br>В случае
-                    несогласии - будет открыт спор.':''}
-                </p>
-                <p class="text-left">Вы уверены, что хотите подтвердить отмену сделки?</p>
+                <p class="text-left">Сделка будет отменена и перенесена в Архив</p>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -36,7 +110,7 @@
                     'successModalID' => 'modalCancelSuccess',
                     'dealResourceID' => 26,
                     'emailTPL' => 'safedeal.deal.cancel.email',
-                    'emailSubject' => $_modx->config.site_name~': Сделка отменена!',            
+                    'emailSubject' => $_modx->config.site_name~': Сделка отменена!',
                     ]}
                 </div>
             </div>
@@ -57,83 +131,70 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade is-authorized" id="modalChangeTermsDeal" tabindex="-1" aria-hidden="true">
+{* Отмена сделки *}
+{* Подтвердить сделку *}
+<div class="modal fade" id="modalAcceptDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Изменить условия сделки</h5>
-                <p class="text-left">Вы подаете заявку на изменение условий сделки</p>
-                <p class="text-left">Введите изменения в поля ниже:</p>
+                <h5 class="modal-title">Подтвердить сделку!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="d-flex flex-column align-items-center">
-                    <div class="col-6 px-0 form-group mb-4">
-                        <label>Сумма сделки</label>
-                        <div class="position-relative">
-                            <input class="form-control transfer-amount" type="text" placeholder="Введите сумму"
-                                form="dealChangeForm" name="price" value="{$price|number:2:'.':','}"
-                                data-inputmask="'alias': 'currency', 'placeholder': '0.00'">
-                            <span class="ruble">₽</span>
+                <div class="modal-body" id="modalAcceptDealBody">
+                    <p class="text-left">Сделка ожидает Вашего подтверждения.</p>
+                    <div class="form-group">
+                        <div class="custom-control custom-radio">
+                            <input type="checkbox" id="RadioAgreeAccept1" class="js-iagreecheck custom-control-input"
+                                checked="" data-form="#formAcceptDeal" data-parent="#modalAcceptDealBody">
+                            <label class="custom-control-label" for="RadioAgreeAccept1">Я согласен с условиями <a
+                                    class="btn btn-link d-inline" href="pravovaya-informacziya.html">пользовательского
+                                    соглашения</a></label>
                         </div>
                     </div>
-                    <div class="col-6 px-0 form-group mb-4">
-                        <label>Срок сделки</label>
-                        <input type="text" class="w-100 datepicker today-min" placeholder="30/10/2022" name="deadline"
-                            form="dealChangeForm" value="{$deadline|date_format : '%d/%m/%Y'}">
+                    <div class="form-group">
+                        <div class="custom-control custom-radio">
+                            <input type="checkbox" id="RadioAgreeAccept2" class="js-iagreecheck custom-control-input"
+                                checked="" data-form="#formAcceptDeal" data-parent="#modalAcceptDealBody">
+                            <label class="custom-control-label" for="RadioAgreeAccept2">Я согласен с условиями сделки</label>
+                        </div>
                     </div>
                 </div>
-                <p>В случае согласии Вашего партнера - условия сделки будут изменены<br>
-                    В случае несогласия - условия сделки не изменятся.</p>
                 <div class="fomr-group d-flex justify-content-end mb-4">
                     <a href="#" class="btn btn-secondary mr-3" data-dismiss="modal">Отмена</a>
                     {'!AjaxForm'|snippet:[
                     'snippet' => 'SafeDeal',
-                    'action' => 'deal/change',
+                    'action' => 'deal/accept',
                     'hash' => $.get.d,
                     'form' => 'safedeal.deal.actions.form',
-                    'form_id' => 'dealChangeForm',
-                    'btn_text' => 'Изменить сделку',
-                    'successModalID' => 'modalSuccessChangeTermsDeal',
-                    'errorModalID' => 'modalErrorChangeTermsDeal',
+                    'form_id' => 'formAcceptDeal',
+                    'btn_text' => 'Подтвердить сделку',
+                    'successModalID' => 'modalAcceptDealSuccess',
                     'dealResourceID' => 26,
-                    'emailTPL' => 'safedeal.deal.change.email',
-                    'emailSubject' => $_modx->config.site_name~': Изменение сделки!',            
+                    'emailTPL' => 'safedeal.deal.confirm.email',
+                    'emailSubject' => $_modx->config.site_name~': Сделка подтверждена!',
                     ]}
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade js-hidden-refresh" id="modalSuccessChangeTermsDeal" tabindex="-1" aria-hidden="true">
+</div>
+<div class="modal fade js-hidden-refresh" id="modalAcceptDealSuccess" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Заявка на изменение условий сделки успешно подана!</h5>
+                <h5 class="modal-title">Сделка успешно подтверждена!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/deal_success.svg" alt="">
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade js-hidden-refresh" id="modalErrorChangeTermsDeal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Заявка на изменение условий сделки не может быть подана!</h5>
-                <p class="mb-0">Обновите страницу и попробуйте еще раз.</p>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
-            </div>
-        </div>
-    </div>
-</div>
-
+{* Подтвердить сделку *}
+{* Оплатить сделку *}
 <div class="modal fade is-authorized" id="modalPayDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -163,12 +224,12 @@
                 </div>
                 <div class="d-flex">
                     <div class="col-6 px-0 form-group mb-0">
-                        <label>Заказчик</label>
+                        <label>Вы Заказчик</label>
                         <p>{$customer_name}</p>
                     </div>
                     <div class="col-6 px-0 form-group mb-0">
                         <label>Исполнитель</label>
-                        <p>{$partner_name}</p>
+                        <p>{$executor_name}</p>
                     </div>
                 </div>
                 <div class="fomr-group d-flex justify-content-end mb-4">
@@ -183,7 +244,7 @@
                     'errorModalID' => 'modalErrorPayDeal',
                     'dealResourceID' => 26,
                     'emailTPL' => 'safedeal.deal.pay.email',
-                    'emailSubject' => $_modx->config.site_name~': Сделка оплачена!',            
+                    'emailSubject' => $_modx->config.site_name~': Сделка оплачена!',
                     ]}
                 </div>
             </div>
@@ -217,108 +278,65 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade is-authorized" id="modalDisputeDeal" tabindex="-1" aria-hidden="true">
+{* Оплатить сделку *}
+{* Продлить сделку *}
+<div class="modal fade is-authorized" id="modalExtensionDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Оспорить сделку</h5>
-                <p class="text-left">Приоритет нашего сервиса - Ваша безопасность, поэтому мы сделаем все возможное,
-                    исключить риск мошенничества.</p>
-                <p class="text-left">Если сделка пошла не по плану - заполните данные о себе для возможности передачи
-                    дела в суд в случае, если партнер не будет согласен с Вашим мнением.</p>
+                <h5 class="modal-title">Продлить срок сделки</h5>
+                <p class="text-left">Вы подаете заявку на продление срока сделки</p>
+                <p class="text-left">Введите изменения в поля ниже:</p>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group mb-4">
-                    <label>Имя</label>
-                    <input name="firstname" type="text" class="form-control" placeholder="Введите имя" form="dealDisputeForm" data-inputmask-regex="^[а-яА-Яa-zA-Z ]+$">
-                </div>
-                <div class="form-group mb-4">
-                    <label>Фамилия</label>
-                    <input name="lasname" type="text" class="form-control" placeholder="Введите фамилию" form="dealDisputeForm" data-inputmask-regex="^[а-яА-Яa-zA-Z ]+$">
-                </div>
-                <div class="form-group mb-4">
-                    <label>Отчество</label>
-                    <input name="middlename" type="text" class="w-100 form-control" placeholder="Введите отчество" form="dealDisputeForm" data-inputmask-regex="^[а-яА-Яa-zA-Z ]+$">
-                </div>
-                {*
-                <div class="d-flex justify-content-between mb-4">
-                    <div class="col-2 form-group mb-0 px-0">
-                        <label>Паспорт</label>
-                        <input name="passport" type="text" class="w-100 form-control" placeholder="Серия" form="dealDisputeForm" data-inputmask-regex="^[а-яА-Яa-zA-Z0-9 ]+$">
-                    </div>
-                    <div class="col-5 form-groupmb-0 ">
-                        <label></label>
-                        <input name="passpor_number" type="text" class="form-control" placeholder="Номер" form="dealDisputeForm" data-inputmask-regex="^[0-9]+$">
-                    </div>
-                    <div class="col-5 form-group mb-0 px-0">
-                        <label>Дата выдачи</label>
-                        <input name="passpor_date" type="text" class="w-100 datepicker" placeholder="31/01/2022" form="dealDisputeForm">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="col-6 px-0 form-group mb-4">
+                        <label>Срок сделки</label>
+                        <input type="text" class="w-100 datepicker today-min" placeholder="30/10/2022" name="deadline"
+                            form="dealExtensionForm" value="{$deadline|date_format : '%d/%m/%Y'}" >
                     </div>
                 </div>
-                <div class="form-group mb-4">
-                    <label>Кем выдан</label>
-                    <input name="passpor_issued" type="text" class="form-control" placeholder="Кем выдан" form="dealDisputeForm">
-                </div>
-                *}
-                <div class="form-group mb-4">
-                    <label>Город</label>
-                    <select name="city" class="custom-select2">
-                        {'Rowboat'|snippet:[
-                        'table' => 'modx_site_cities',
-                        'tpl' => 'tpl.select.cities.row',
-                        'limit' => 0,
-                        'sortBy' => 'name'
-                        ]}
-                    </select>
-                </div>
-                <div class="form-group mb-4">
-                    <label>Улица, дом, корпус, квартира</label>
-                    <input name="address" type="text" class="form-control" placeholder="Улица, дом, корпус, квартира" form="dealDisputeForm">
-                </div>
-                <div class="form-group mb-4">
-                    <label>Опишите проблему</label>
-                    <textarea name="description" class="form-control" placeholder="Описание проблемы"
-                        rows="4" form="dealDisputeForm"></textarea>
-                </div>
+                <p>В случае согласия Вашего партнера - срок сделки будет изменен<br>
+                    В случае несогласия - срок сделки останется прежним.</p>
                 <div class="fomr-group d-flex justify-content-end mb-4">
                     <a href="#" class="btn btn-secondary mr-3" data-dismiss="modal">Отмена</a>
                     {'!AjaxForm'|snippet:[
                     'snippet' => 'SafeDeal',
-                    'action' => 'deal/dispute',
+                    'action' => 'deal/extension/request',
                     'hash' => $.get.d,
                     'form' => 'safedeal.deal.actions.form',
-                    'form_id' => 'dealDisputeForm'
-                    'btn_text' => 'Оспорить сделку',
-                    'successModalID' => 'modalSuccessDisputeDeal',
+                    'form_id' => 'dealExtensionForm',
+                    'btn_text' => 'Изменить срок сделки',
+                    'successModalID' => 'modalSuccesExtensionDeal',
+                    'errorModalID' => 'modalErrorExtensionDeal',
                     'dealResourceID' => 26,
-                    'emailTPL' => 'safedeal.deal.dispute.email',
-                    'emailSubject' => $_modx->config.site_name~': Сделка оспорена!',            
+                    'emailTPL' => 'safedeal.deal.extension.email',
+                    'emailSubject' => $_modx->config.site_name~': Изменение срока сделки!',
                     ]}
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade js-hidden-refresh" id="modalSuccessDisputeDeal" tabindex="-1" aria-hidden="true">
+<div class="modal fade js-hidden-refresh" id="modalSuccesExtensionDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Спор успешно открыт!</h5>
+                <h5 class="modal-title">Заявка на продление срока сделки успешно подана!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/dispute_success.svg" alt="">
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade" id="modalErrorDisputeDeal" tabindex="-1" aria-hidden="true">
+<div class="modal fade js-hidden-refresh" id="modalErrorExtensionDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">В данный момент Вы не можете оспорить эту сделку!</h5>
+                <h5 class="modal-title">Заявка на продление срока сделки не может быть подана!</h5>
                 <p class="mb-0">Обновите страницу и попробуйте еще раз.</p>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -328,7 +346,36 @@
         </div>
     </div>
 </div>
-
+{* Продлить сделку *}
+{* Подтвердить продление сделки *}
+<div class="modal fade js-hidden-refresh" id="modalAcceptExtensionDealSuccess" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Продление сделки успешно подтверждено!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/deal_success.svg" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade js-hidden-refresh" id="modalSuccessCancelExtensionDeal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Продление сделки успешно отклонено!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/deal_success.svg" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+{* Подтвердить продление сделки *}
+{* Завершение сделки *}
 <div class="modal fade js-hidden-refresh" id="modalSuccessCompleteDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
@@ -356,3 +403,20 @@
         </div>
     </div>
 </div>
+{* Завершение сделки *}
+{* Выовд средств *}
+<div class="modal fade" id="modalWithdrawFundsDeal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Сделка успешно завершена!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" aria-label="Close">Получить деньги</button>
+                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/dispute_success.svg" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+{* Выовд средств *}

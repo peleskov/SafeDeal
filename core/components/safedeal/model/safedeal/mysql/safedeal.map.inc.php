@@ -15,22 +15,17 @@ $xpdo_meta_map['SafeDeal']= array (
     'author_id' => 0,
     'partner_id' => 0,
     'is_customer' => 1,
-    'is_company' => 0,
-    'company_name' => NULL,
-    'fee_payer' => 0,
     'title' => NULL,
     'description' => NULL,
     'status' => 1,
     'payment_id' => 0,
     'payment_total' => 0.0,
+    'funds_withdrawn' => 0,
     'price' => 0.0,
     'fee' => 0.0,
     'deadline' => NULL,
-    'hash' => NULL,
-    'initiator_id' => 0,
-    'tmp_price' => 0.0,
-    'tmp_fee' => 0.0,
     'tmp_deadline' => 0,
+    'hash' => NULL,
   ),
   'fieldMeta' => 
   array (
@@ -72,29 +67,6 @@ $xpdo_meta_map['SafeDeal']= array (
       'null' => true,
       'default' => 1,
     ),
-    'is_company' => 
-    array (
-      'dbtype' => 'tinyint',
-      'precision' => '1',
-      'phptype' => 'boolean',
-      'null' => true,
-      'default' => 0,
-    ),
-    'company_name' => 
-    array (
-      'dbtype' => 'varchar',
-      'precision' => '191',
-      'phptype' => 'string',
-      'null' => true,
-    ),
-    'fee_payer' => 
-    array (
-      'dbtype' => 'int',
-      'precision' => '1',
-      'phptype' => 'integer',
-      'null' => false,
-      'default' => 0,
-    ),
     'title' => 
     array (
       'dbtype' => 'varchar',
@@ -131,6 +103,14 @@ $xpdo_meta_map['SafeDeal']= array (
       'null' => false,
       'default' => 0.0,
     ),
+    'funds_withdrawn' => 
+    array (
+      'dbtype' => 'int',
+      'precision' => '1',
+      'phptype' => 'integer',
+      'null' => false,
+      'default' => 0,
+    ),
     'price' => 
     array (
       'dbtype' => 'float',
@@ -152,35 +132,6 @@ $xpdo_meta_map['SafeDeal']= array (
       'phptype' => 'integer',
       'null' => true,
     ),
-    'hash' => 
-    array (
-      'dbtype' => 'varchar',
-      'precision' => '256',
-      'phptype' => 'string',
-      'null' => true,
-    ),
-    'initiator_id' => 
-    array (
-      'dbtype' => 'int',
-      'precision' => '10',
-      'phptype' => 'integer',
-      'null' => false,
-      'default' => 0,
-    ),
-    'tmp_price' => 
-    array (
-      'dbtype' => 'float',
-      'phptype' => 'float',
-      'null' => false,
-      'default' => 0.0,
-    ),
-    'tmp_fee' => 
-    array (
-      'dbtype' => 'float',
-      'phptype' => 'float',
-      'null' => false,
-      'default' => 0.0,
-    ),
     'tmp_deadline' => 
     array (
       'dbtype' => 'int',
@@ -188,6 +139,13 @@ $xpdo_meta_map['SafeDeal']= array (
       'phptype' => 'integer',
       'null' => true,
       'default' => 0,
+    ),
+    'hash' => 
+    array (
+      'dbtype' => 'varchar',
+      'precision' => '256',
+      'phptype' => 'string',
+      'null' => true,
     ),
   ),
 );

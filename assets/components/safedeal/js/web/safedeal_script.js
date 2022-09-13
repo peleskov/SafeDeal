@@ -6,9 +6,33 @@ $(document).ready(() => {
     /* Обновить страницу при закрытии попап */
     /* Расчет комиссии при создании сделки */
     $('.js-dealprice').on('change keyup', (e) => {
-        $(e.target).closest('form').find('.js-dealfee').text(($(e.target).val().replace(/,/g, '') * $(e.target).data('fee')).toLocaleString());
+        $('.js-dealfee').text(($(e.target).val().replace(/,/g, '') * $(e.target).data('fee')).toLocaleString());
     });
     /* Расчет комиссии при создании сделки */
+    /* Блокировка кнопки submit без согласия */
+    $('.js-iagreecheck').on('change', (e) => {
+        let form
+        if ($(e.target).data('form')) {
+            form = $(e.target).data('form')
+        } else {
+            form = $(e.target).closest('form')
+        }
+        $(form).find('[type="submit"]').removeAttr('disabled')
+        if ($(e.target).data('parent')) {
+            $($(e.target).data('parent')).find('.js-iagreecheck').each((i, el) => {
+                if (!$(el).is(':checked')) {
+                    $(form).find('[type="submit"]').attr('disabled', '')
+                }
+            })
+        } else {
+            if ($(e.target).is(':checked')) {
+                $(form).find('[type="submit"]').removeAttr('disabled')
+            } else {
+                $(form).find('[type="submit"]').attr('disabled', '')
+            }
+        }
+    })
+    /* Блокировка кнопки submit без согласия */
 
 });
 

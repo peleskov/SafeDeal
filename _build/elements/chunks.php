@@ -57,4 +57,16 @@ return [
         'file' => 'safedeal.deal.pay.email',
         'description' => '',
     ],    
+    'safedeal.deal.extension.email' => [
+        'file' => 'safedeal.deal.extension.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.extension.cancel.email' => [
+        'file' => 'safedeal.deal.extension.cancel.email',
+        'description' => '',
+    ],    
+    'safedeal.deal.extension.accept.email' => [
+        'file' => 'safedeal.deal.extension.accept.email',
+        'description' => '',
+    ],    
 ];

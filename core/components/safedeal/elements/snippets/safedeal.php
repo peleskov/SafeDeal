@@ -56,10 +56,59 @@ switch ($scriptProperties['action']) {
         } else {
             $errors['user_id'] = 'User ID not found!';
         }
+        if (isset($_FILES['docs']) && !empty($_FILES['docs'])) {
+            $docs = [];
+            foreach ($_FILES['docs'] as $k => $l) {
+                foreach ($l as $i => $v) {
+                    $docs[$i][$k] = $v;
+                }
+            }
+            $docMaxSize = $modx->getOption('imageMaxSize', $scriptProperties, 1048576);
+            $validExt = explode(',', $modx->getOption('validExt', $scriptProperties, 'pdf,txt,doc,docx,xls,xlsx'));
+            foreach ($docs as $key => $doc) {
+                if ($doc['error'] == 0 && is_uploaded_file($doc['tmp_name'])) {
+                    if ($doc['size'] >= $docMaxSize) {
+                        $err = $doc['name'] . ': Размер файла превышает допустимый лимит.' . PHP_EOL;
+                        $errors['docs[]'] = empty($errors['docs[]'])? $err:$errors['docs[]'] . $err;
+                        break;
+                    }
+                    $docExt = trim(mb_strtolower(pathinfo($doc['name'], PATHINFO_EXTENSION)));
+                    if (!in_array($docExt, $validExt)) {
+                        $err = $doc['name'] . ': Не допустимый тип файла.' . PHP_EOL;
+                        $errors['docs[]'] = empty($errors['docs[]'])? $err:$errors['docs[]'] . $err;
+                    }
+                }
+            }
+        }
         /* Validate fields */
 
         /* Create deal */
         if (empty($errors)) {
+            if (!empty($docs)) {
+                $docsDirPath = rtrim($modx->getOption('docsDirPath', $scriptProperties, MODX_ASSETS_PATH . 'docs/usr_' . $user_id), '/');
+                if (!file_exists($docsDirPath)) mkdir($docsDirPath, 0755, true);
+                $new_docs = [];
+                foreach ($docs as $key => $doc) {
+                    $docExt = trim(mb_strtolower(pathinfo($doc['name'], PATHINFO_EXTENSION)));
+                    $newDocName = md5($doc['name'] . rand()) . '.' . $docExt;
+                    $newDocPath = $docsDirPath . '/' . $newDocName;
+                    if (move_uploaded_file($doc['tmp_name'], $newDocPath)) {
+                        $newDoc = str_replace(MODX_BASE_PATH, '', $newDocPath);
+                        $new_docs[] = array(
+                            'name' => $newDocName,
+                            'name_original' => $doc['name'],
+                            'path' => $newDoc,
+                            'url' => $newDoc,
+                            'full_url' => MODX_SITE_URL . $newDoc,
+                            'size' => $doc['size'],
+                            'extension' => $docExt
+                        );
+                    } else {
+                        $errors['docs'][$doc['name']] = 'Не удалось сохранить файл.';
+                    }
+                }
+
+            }
             $hash = hash('sha256', time() . $user_id . $_POST['is_customer'] . $_POST['is_company'] . $_POST['company_name'] . $_POST['fee_payer'] . $_POST['fee_payer'] . $_POST['title'] . $_POST['description'] . $_POST['price'] . strtotime($_POST['deadline']) . rand());
             $data['hash_link'] = $modx->makeUrl($scriptProperties['dealResourceID'], '', array('d' => $hash), 'full');
             $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
@@ -71,12 +120,16 @@ switch ($scriptProperties['action']) {
             $deal->set('author_id', $user_id);
             $deal->set('is_customer', (int) $_POST['is_customer']);
             $deal->set('title', strip_tags($_POST['title']));
+            if (!empty($_POST['partner_id'])) {
+                $deal->set('partner_id', (int) $_POST['partner_id']);
+            }
             $deal->set('description', strip_tags($_POST['description']));
             $deal->set('status', 0);
             $deal->set('price', $price);
             $deal->set('fee', $fee);
             $deal->set('deadline', $deadline->getTimestamp());
             $deal->set('hash', $hash);
+            $deal->set('docs', json_encode($new_docs, true));
             if (!$deal->save()) {
                 $errors['deal'] = 'Can not create a deal!';
             }

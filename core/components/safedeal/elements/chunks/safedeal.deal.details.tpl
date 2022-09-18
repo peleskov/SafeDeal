@@ -33,6 +33,16 @@
     </div>
 </div>
 <div class="row">
+    <div class="col">
+        <p>Прикрепленные файлы:</p>
+        <ul>
+            {foreach $docs as $doc}
+                <li><a href="{$doc.url}" target="_blank">{$doc.name_original}</a></li>
+            {/foreach}
+        </ul>
+    </div>
+</div>    
+<div class="row">
     <div class="col-12 col-xl-9 d-flex flex-wrap px-0">
         <div class="col-6 col-xl-4 mb-4">
             <p class="text-muted text-medium mb-3">Сумма сделки</p>

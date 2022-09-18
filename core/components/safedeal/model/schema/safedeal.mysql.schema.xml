@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model package="safedeal" baseClass="xPDOObject" platform="mysql" defaultEngine="InnoDB" phpdoc-package="safedeal"
-       version="1.1">
+<model package="safedeal" baseClass="xPDOObject" platform="mysql" defaultEngine="InnoDB" phpdoc-package="safedeal" version="1.1">
 
     <object class="SafeDeal" table="safedeal" extends="xPDOSimpleObject">
-		<field key="created" dbtype="int" precision="10" phptype="integer" null="false" />
-		<field key="updated" dbtype="int" precision="10" phptype="integer" null="true" />
-		<field key="author_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
-		<field key="partner_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="created" dbtype="int" precision="10" phptype="integer" null="false" />
+        <field key="updated" dbtype="int" precision="10" phptype="integer" null="true" />
+        <field key="author_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="partner_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
         <field key="is_customer" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="1" />
         <field key="title" dbtype="varchar" precision="191" phptype="string" null="true" />
         <field key="description" dbtype="mediumtext" phptype="string" null="true" />
@@ -16,9 +15,10 @@
         <field key="funds_withdrawn" dbtype="int" precision="1" phptype="integer" null="false" default="0" />
         <field key="price" dbtype="float" phptype="float" null="false" default="0" />
         <field key="fee" dbtype="float" phptype="float" null="false" default="0" />
-		<field key="deadline" dbtype="int" precision="10" phptype="integer" null="true" />
-		<field key="tmp_deadline" dbtype="int" precision="10" phptype="integer" null="true" default="0" />
+        <field key="deadline" dbtype="int" precision="10" phptype="integer" null="true" />
+        <field key="tmp_deadline" dbtype="int" precision="10" phptype="integer" null="true" default="0" />
         <field key="hash" dbtype="varchar" precision="256" phptype="string" null="true" />
+        <field key="docs" dbtype="text" phptype="string" null="false" default=""/>
     </object>
 
 </model>

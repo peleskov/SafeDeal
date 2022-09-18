@@ -11,6 +11,8 @@
                     'action' => 'deal/create',
                     'form' => 'safedeal.deal.create.form',
                     'dealResourceID' => 26,
+                    'docsDirPath' => $_modx->config.assets_path~'docs/usr_'~$_modx->user.id,
+                    'docMaxSize' => 1048576,
                     'successMsg' => 'Сделка успешно создана!',
                     'successModalID' => 'successSafeDealCreateModal',
                     'errorMsg' => 'Форма содержит ошибки попробуйте еще раз.',

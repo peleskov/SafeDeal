@@ -66,6 +66,7 @@ switch ($action) {
                     'fee' => $deal->get('fee'),
                     'funds_withdrawn' => $deal->get('funds_withdrawn'),
                     'deadline' => $deal->get('deadline'),
+                    'docs' => json_decode($deal->get('docs'), true),
                     'tmp_deadline' => $deal->get('tmp_deadline'),
                 ), $scriptProperties);
                 $items[] = empty($tpl)

@@ -26,6 +26,7 @@ $xpdo_meta_map['SafeDeal']= array (
     'deadline' => NULL,
     'tmp_deadline' => 0,
     'hash' => NULL,
+    'docs' => '',
   ),
   'fieldMeta' => 
   array (
@@ -146,6 +147,13 @@ $xpdo_meta_map['SafeDeal']= array (
       'precision' => '256',
       'phptype' => 'string',
       'null' => true,
+    ),
+    'docs' => 
+    array (
+      'dbtype' => 'text',
+      'phptype' => 'string',
+      'null' => false,
+      'default' => '',
     ),
   ),
 );

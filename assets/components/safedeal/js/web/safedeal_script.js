@@ -33,6 +33,17 @@ $(document).ready(() => {
         }
     })
     /* Блокировка кнопки submit без согласия */
+    /* Отображение имен добавленных файлов */
+    $('.js-input-docs').on('change', (e) => {
+        let files = e.target.files;
+        if (files) {
+            $(e.target).closest('.form-group').find('.js-docs li').remove()
+            $(files).each((i, file) => {
+                $(e.target).closest('.form-group').find('.js-docs').append('<li>' + file.name + '</li>');
+            })
+        }
+    })
+    /* Отображение имен добавленных файлов */
 
 });
 

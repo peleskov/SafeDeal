@@ -62,11 +62,11 @@
             <p class="mb-0">{($price+$fee)|number:2:'.':','} ₽</p>
         </div>
         <div class="col-6 col-xl-4 py-2 mb-4{$customer_id == $_modx->user.id? ' bg-blue':''}">
-            <p class="text-muted text-medium mb-3">{$customer_id == $_modx->user.id? 'Вы ':''}Заказчик</p>
+            <p class="text-muted text-medium mb-3">{$customer_id == $_modx->user.id? 'Вы ':''}Покупатель</p>
             <p class="mb-0">{$customer_name}</p>
         </div>
         <div class="col-6 col-xl-4 py-2 mb-4{$executor_id == $_modx->user.id? ' bg-blue':''}">
-            <p class="text-muted text-medium mb-3">{$executor_id == $_modx->user.id? 'Вы ':''}Исполнитель</p>
+            <p class="text-muted text-medium mb-3">{$executor_id == $_modx->user.id? 'Вы ':''}Продавец</p>
             <p class="mb-0">{$executor_name}</p>
         </div>
         <div class="col-6 col-xl-4 py-2 mb-4">

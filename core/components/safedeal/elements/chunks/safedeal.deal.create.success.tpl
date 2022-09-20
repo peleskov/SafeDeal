@@ -11,7 +11,7 @@
                     <label>Ссылка на сделку</label>
                     <div class="d-flex align-items-center">
                         <div class="col px-0 mr-3">
-                            <input type="text" id="DealLink" class="form-control">
+                            <input type="text" id="DealLink" class="form-control js-deallink">
                         </div>
                         <div class="col-auto px-0 position-relative">
                             <button type="button" class="btn btn-clipboard" data-clipboard-target="#DealLink"

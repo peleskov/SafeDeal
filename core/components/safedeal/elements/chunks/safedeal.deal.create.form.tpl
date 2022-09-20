@@ -54,7 +54,7 @@
         <div class="custom-control custom-radio">
             <input type="checkbox" id="RadioAgree1" name="iagreecheck" class="custom-control-input" checked="">
             <label class="custom-control-label" for="RadioAgree1">Я согласен с условиями <a
-                    class="btn btn-link d-inline" href="pravovaya-informacziya.html">пользовательского
+                    class="btn btn-link d-inline" href="{'getImageList'|snippet:['tvname' => 'docs', 'docid' => 7, 'where' => '{id:=1}', 'limit' => 1, 'tpl' => 'tpl.doc.link']}" target="_blank">пользовательского
                     соглашения</a></label>
         </div>
     </div>

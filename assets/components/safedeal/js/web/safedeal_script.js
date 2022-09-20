@@ -1,4 +1,15 @@
 $(document).ready(() => {
+    /* Удалить документ из сделки */
+    $('.js-remove-doc').on('click', function (e) {
+        let doc_ids = $('[name="doc_ids"]').val().split(',');
+        let index = doc_ids.indexOf(`${$(e.target).data('docid')}`);
+        if (index !== -1) {
+            doc_ids.splice(index, 1);
+        }        
+        $('[name="doc_ids"]').val(doc_ids.join(','))
+        $(e.target).closest('li').remove();
+    })
+    /* Удалить документ из сделки */
     /* Обновить страницу при закрытии попап */
     $('.js-hidden-refresh').on('hidden.bs.modal', function (e) {
         location.href = location.href;
@@ -112,8 +123,9 @@ $(document).ready(() => {
             }
             if (modalID) {
                 $('.modal').modal('hide')
-                if ('hash_link' in response.data && $('.modal').find('#DealLink').length > 0) {
-                    $('.modal').find('#DealLink').val(response.data.hash_link)
+                if ('hash_link' in response.data && $('.modal').find('.js-deallink').length > 0) {
+                    $('.modal').find('input.js-deallink').val(response.data.hash_link)
+                    $('.modal').find('a.js-deallink').attr('href', response.data.hash_link)
                 }
                 $('#' + modalID).modal('show')
             }

@@ -69,13 +69,13 @@ switch ($scriptProperties['action']) {
                 if ($doc['error'] == 0 && is_uploaded_file($doc['tmp_name'])) {
                     if ($doc['size'] >= $docMaxSize) {
                         $err = $doc['name'] . ': Размер файла превышает допустимый лимит.' . PHP_EOL;
-                        $errors['docs[]'] = empty($errors['docs[]'])? $err:$errors['docs[]'] . $err;
+                        $errors['docs[]'] = empty($errors['docs[]']) ? $err : $errors['docs[]'] . $err;
                         break;
                     }
                     $docExt = trim(mb_strtolower(pathinfo($doc['name'], PATHINFO_EXTENSION)));
                     if (!in_array($docExt, $validExt)) {
                         $err = $doc['name'] . ': Не допустимый тип файла.' . PHP_EOL;
-                        $errors['docs[]'] = empty($errors['docs[]'])? $err:$errors['docs[]'] . $err;
+                        $errors['docs[]'] = empty($errors['docs[]']) ? $err : $errors['docs[]'] . $err;
                     }
                 }
             }
@@ -107,11 +107,10 @@ switch ($scriptProperties['action']) {
                         $errors['docs'][$doc['name']] = 'Не удалось сохранить файл.';
                     }
                 }
-
             }
             $hash = hash('sha256', time() . $user_id . $_POST['is_customer'] . $_POST['is_company'] . $_POST['company_name'] . $_POST['fee_payer'] . $_POST['fee_payer'] . $_POST['title'] . $_POST['description'] . $_POST['price'] . strtotime($_POST['deadline']) . rand());
             $data['hash_link'] = $modx->makeUrl($scriptProperties['dealResourceID'], '', array('d' => $hash), 'full');
-            $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
+            $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', str_replace('.', '/', $_POST['deadline']) . ' 00:00:00');
             $price = (float) str_replace(',', '', $_POST['price']);
             $fee = (float) $price * $modx->getOption('company_fee', null, 0.05, true);
             $deal = $modx->newObject('SafeDeal');
@@ -175,11 +174,76 @@ switch ($scriptProperties['action']) {
         } else {
             $errors['user_id'] = 'User ID not found!';
         }
+        $modx->log(1, print_r($_FILES['docs'], true));
+        if (isset($_FILES['docs']) && !empty($_FILES['docs'])) {
+            $docs = [];
+            foreach ($_FILES['docs'] as $k => $l) {
+                foreach ($l as $i => $v) {
+                    $docs[$i][$k] = $v;
+                }
+            }
+            $docMaxSize = $modx->getOption('imageMaxSize', $scriptProperties, 1048576);
+            $validExt = explode(',', $modx->getOption('validExt', $scriptProperties, 'pdf,txt,doc,docx,xls,xlsx'));
+            foreach ($docs as $key => $doc) {
+                if ($doc['error'] == 0 && is_uploaded_file($doc['tmp_name'])) {
+                    if ($doc['size'] >= $docMaxSize) {
+                        $err = $doc['name'] . ': Размер файла превышает допустимый лимит.' . PHP_EOL;
+                        $errors['docs[]'] = empty($errors['docs[]']) ? $err : $errors['docs[]'] . $err;
+                        break;
+                    }
+                    $docExt = trim(mb_strtolower(pathinfo($doc['name'], PATHINFO_EXTENSION)));
+                    if (!in_array($docExt, $validExt)) {
+                        $err = $doc['name'] . ': Не допустимый тип файла.' . PHP_EOL;
+                        $errors['docs[]'] = empty($errors['docs[]']) ? $err : $errors['docs[]'] . $err;
+                    }
+                }
+            }
+        }
+
+
         /* Change deal */
         if (empty($errors)) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
                 if (in_array($deal->get('status'), [0, 1])) {
-                    $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
+                    $new_docs = [];
+                    if (!empty($docs)) {
+                        $docsDirPath = rtrim($modx->getOption('docsDirPath', $scriptProperties, MODX_ASSETS_PATH . 'docs/usr_' . $user_id), '/');
+                        if (!file_exists($docsDirPath)) mkdir($docsDirPath, 0755, true);
+                        foreach ($docs as $key => $doc) {
+                            $docExt = trim(mb_strtolower(pathinfo($doc['name'], PATHINFO_EXTENSION)));
+                            $newDocName = md5($doc['name'] . rand()) . '.' . $docExt;
+                            $newDocPath = $docsDirPath . '/' . $newDocName;
+                            if (move_uploaded_file($doc['tmp_name'], $newDocPath)) {
+                                $newDoc = str_replace(MODX_BASE_PATH, '', $newDocPath);
+                                $new_docs[] = array(
+                                    'name' => $newDocName,
+                                    'name_original' => $doc['name'],
+                                    'path' => $newDoc,
+                                    'url' => $newDoc,
+                                    'full_url' => MODX_SITE_URL . $newDoc,
+                                    'size' => $doc['size'],
+                                    'extension' => $docExt
+                                );
+                            } else {
+                                $errors['docs'][$doc['name']] = 'Не удалось сохранить файл.';
+                            }
+                        }
+                    }
+                    $cur_docs = json_decode($deal->get('docs'), true);
+                    if (!empty($cur_docs)) {
+                        $doc_ids = explode(',', $_POST['doc_ids']);
+                        if (empty($doc_ids)) {
+                            $cur_docs = [];
+                        } else {
+                            foreach ($cur_docs as $k => $cur_doc) {
+                                if (!in_array($k, $doc_ids)) {
+                                    unset($cur_docs[$k]);
+                                }
+                            }
+                        }
+                    }
+                    $new_docs = array_merge($new_docs, $cur_docs);
+                    $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', str_replace('.', '/', $_POST['deadline']) . ' 00:00:00');
                     $price = (float) str_replace(',', '', $_POST['price']);
                     $fee = (float) $price * $modx->getOption('company_fee', null, 0.05, true);
                     $deal->set('title', strip_tags($_POST['title']));
@@ -189,11 +253,12 @@ switch ($scriptProperties['action']) {
                     $deal->set('deadline', $deadline->getTimestamp());
                     $deal->set('status', 0);
                     $deal->set('updated', time());
+                    $deal->set('docs', json_encode($new_docs, true));
                     if (!$deal->save()) {
                         $errors['deal'] = 'Can not save a deal!';
                     }
                 } else {
-                    $errors['deal'] = 'Can not change status a deal!';
+                    $errors['deal'] = 'Can not change deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
@@ -220,7 +285,7 @@ switch ($scriptProperties['action']) {
         if (empty($errors)) {
             if ($deal = $modx->getObject('SafeDeal', array('hash' => $scriptProperties['hash']))) {
                 if ($deal->get('status') == 3) {
-                    $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $_POST['deadline'] . ' 00:00:00');
+                    $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', str_replace('.', '/', $_POST['deadline']) . ' 00:00:00');
                     $deal->set('tmp_deadline', $deadline->getTimestamp());
                     $deal->set('status', 4);
                     $deal->set('updated', time());

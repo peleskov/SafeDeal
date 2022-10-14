@@ -8,6 +8,11 @@ if ($pdoClass = $modx->loadClass($fqn, $path, false, true)) {
 }
 $pdoFetch->addTime('pdoTools loaded');
 
+$SafeDeal = $modx->getService('SafeDeal', 'SafeDeal', MODX_CORE_PATH . 'components/safedeal/model/', $scriptProperties);
+if (!$SafeDeal) {
+    return 'Could not load SafeDeal class!';
+}
+
 if (!isset($outputSeparator)) {
     $outputSeparator = "\n";
 }
@@ -15,7 +20,7 @@ if (!isset($outputSeparator)) {
 switch ($action) {
     case 'deal/details':
         if ($hash) {
-            if ($deal = $modx->getObject('SafeDeal', array('hash' => $hash))) {
+            if ($deal = $modx->getObject('Deal', array('hash' => $hash))) {
                 $description_html = '';
                 if ($dscrp = $deal->get('description')) {
                     foreach (explode("\n", $dscrp) as $str) {
@@ -117,9 +122,9 @@ switch ($action) {
         if (!empty($max)) {
             $where['price:<='] = $max;
         }
-        $q = $modx->newQuery('SafeDeal');
+        $q = $modx->newQuery('Deal');
         $q->where($where);
-        $total = $modx->getCount('SafeDeal', $q);
+        $total = $modx->getCount('Deal', $q);
         $totalVar = $modx->getOption('totalVar', $scriptProperties, 'total');
         $modx->setPlaceholder($totalVar, $total);
         $limit = $modx->getOption('limit', $scriptProperties, 1);
@@ -127,12 +132,12 @@ switch ($action) {
 
         $sortby = $modx->getOption('sortby', $scriptProperties, 'created');
         $sortdir = $modx->getOption('sortdir', $scriptProperties, 'DESC');
-        $q->sortby('`SafeDeal`.`' . $sortby . '`', $sortdir);
+        $q->sortby('`Deal`.`' . $sortby . '`', $sortdir);
 
         $q->limit($limit, $offset);
         $q->prepare();
         //$modx->log(1, $q->toSQL());
-        $deals = $modx->getCollection('SafeDeal', $q);
+        $deals = $modx->getCollection('Deal', $q);
 
         $items = array();
         $idx = 0;

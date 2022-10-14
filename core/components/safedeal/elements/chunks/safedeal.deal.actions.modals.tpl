@@ -14,14 +14,17 @@
                 </div>
                 <div class="form-group mb-4">
                     <label>Описание</label>
-                    <textarea class="form-control" name="description" placeholder="Описание сделки"
-                        rows="4" form="formChangeDeal">{$description}</textarea>
+                    <textarea class="form-control" name="description" placeholder="Описание сделки" rows="4"
+                        form="formChangeDeal">{$description}</textarea>
                 </div>
                 <div class="form-group mb-4">
-                    <label>Загрузите документы <span class="d-block text-medium text-small">Вы можете прикрепить не больше 5 файлов, размер каждого файла не должен превышать 1 Мб, допускаются следующие типы фалов: pdf, txt, doc, docx, xls, xlsx</span></label>
+                    <label>Загрузите документы <span class="d-block text-medium text-small">Вы можете прикрепить не
+                            больше 5 файлов, размер каждого файла не должен превышать 1 Мб, допускаются следующие типы
+                            фалов: pdf, txt, doc, docx, xls, xlsx</span></label>
                     <div class="custom-file">
-                        <input type="file" class="custom-file-input js-input-docs" id="inputDocs" name="docs[]" multiple="" form="formChangeDeal"> 
-                        <label class="custom-file-label" for="inputDocs" >Выбрать файлы</label>
+                        <input type="file" class="custom-file-input js-input-docs" id="inputDocs" name="docs[]"
+                            multiple="" form="formChangeDeal">
+                        <label class="custom-file-label" for="inputDocs">Выбрать файлы</label>
                     </div>
                     <ul class="nav flex-column js-docs text-muted text-small"></ul>
                 </div>
@@ -31,11 +34,11 @@
                     {set $doc_ids = []}
                     <ul class="nav">
                         {foreach $docs as $k => $doc}
-                            {set $doc_ids[] = $k}
-                            <li class="border-bottom mb-1">
-                                <a href="{$doc.url}" target="_blank">{$doc.name_original}</a>
-                                <button type="button" class="btn btn-trash p-3 js-remove-doc" data-docid="{$k}"></button>
-                            </li>
+                        {set $doc_ids[] = $k}
+                        <li class="border-bottom mb-1">
+                            <a href="{$doc.url}" target="_blank">{$doc.name_original}</a>
+                            <button type="button" class="btn btn-trash p-3 js-remove-doc" data-docid="{$k}"></button>
+                        </li>
                         {/foreach}
                     </ul>
                     <input type="hidden" name="doc_ids" value="{$doc_ids|join}" form="formChangeDeal">
@@ -46,7 +49,8 @@
                     <div class="position-relative">
                         <input class="form-control transfer-amount js-dealprice" name="price" type="text"
                             data-fee="{$_modx->config.company_fee? :'0.05'}" placeholder="Введите сумму"
-                            data-inputmask="'alias': 'currency', 'placeholder': '0.00'" value="{$price}" form="formChangeDeal">
+                            data-inputmask="'alias': 'currency', 'placeholder': '0.00'" value="{$price}"
+                            form="formChangeDeal">
                         <span class="ruble">₽</span>
                     </div>
                 </div>
@@ -173,7 +177,8 @@
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" id="RadioAgreeAccept2" class="js-iagreecheck custom-control-input"
                                 checked="" data-form="#formAcceptDeal" data-parent="#modalAcceptDealBody">
-                            <label class="custom-control-label" for="RadioAgreeAccept2">Принимаю условия и срок сделки</label>
+                            <label class="custom-control-label" for="RadioAgreeAccept2">Принимаю условия и срок
+                                сделки</label>
                         </div>
                     </div>
                 </div>
@@ -251,46 +256,161 @@
                 </div>
                 <div class="fomr-group d-flex justify-content-end mb-4">
                     <a href="#" class="btn btn-secondary mr-3" data-dismiss="modal">Отмена</a>
-                    {'!AjaxForm'|snippet:[
-                    'snippet' => 'SafeDeal',
-                    'action' => 'deal/pay',
-                    'hash' => $.get.d,
-                    'form' => 'safedeal.deal.actions.form',
-                    'btn_text' => 'Оплата (тест)',
-                    'successModalID' => 'modalSuccessPayDeal',
-                    'errorModalID' => 'modalErrorPayDeal',
-                    'dealResourceID' => 26,
-                    'emailTPL' => 'safedeal.deal.pay.email',
-                    'emailSubject' => $_modx->config.site_name~': Сделка оплачена!',
-                    ]}
+                    <a href="#modalPaymentDeal" class="btn btn-primary" data-dismiss="modal"
+                        data-toggle="modal">Оплата</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade js-hidden-refresh" id="modalSuccessPayDeal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered">
+<div class="modal fade is-authorized" id="modalPaymentDeal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">Ваша сделка успешно оплачена!</h5>
+                <h5 class="modal-title">Оплата</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
+                <div class="fomr-group d-flex align-items-end mb-4">
+                    <label class="mb-0 mr-2">Сумма к оплате:</label>
+                    <p class="mb-0">{$price+$fee} ₽</p>
+                </div>
+                <div class="form-group">
+                    <label>Имя владельца</label>
+                    <input type="text" class="w-100 form-control" name="cc_holder"
+                        data-inputmask="'regex': '[a-zA-Z ]*'" placeholder="Ivanov Ivan"
+                        form="dealPaymentForm">
+                </div>
+                <div class="form-group">
+                    <label>Номер карты</label>
+                    <input type="text" class="w-100 form-control" name="cc_num"
+                        data-inputmask="'mask': '9999 9999 9999 9999'" placeholder="0000 0000 0000 0000"
+                        form="dealPaymentForm">
+                </div>
+                <div class="form-group row no-gutters">
+                    <div class="col-12 col-lg-8 d-flex align-items-end mb-3">
+                        <div class="mr-2">
+                            <label>Срок действия</label>
+                            <input type="text" class="w-100 form-control" name="cc_month"
+                                data-inputmask="'alias': 'datetime', 'inputFormat': 'mm', 'placeholder': 'ММ'"
+                                placeholder="ММ" form="dealPaymentForm">
+                        </div>
+                        <div class="delim mr-2"></div>
+                        <div class="mr-lg-3">
+                            <input type="text" class="w-100 form-control" name="cc_year"
+                                data-inputmask="'alias': 'datetime', 'inputFormat': 'yy', 'placeholder': 'ГГ'"
+                                placeholder="ГГ" form="dealPaymentForm">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label>Код</label>
+                        <div class="position-relative">
+                            <input type="password" class="w-100 form-control" name="cc_cvc"
+                                data-inputmask="'mask': '999'" placeholder="CVC" form="dealPaymentForm">
+                            <button type="button" class="btn btn-pwdshow"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="getReceipt" data-toggle="collapse"
+                            data-target="#collapseGetReceipt" aria-expanded="false">
+                        <label class="custom-control-label" for="getReceipt">Получить квитанцию</label>
+                    </div>
+                    <div class="collapse" id="collapseGetReceipt">
+                        <p class="mb-2">Введите email на который отправить чек</p>
+                        <p class="text-medium text-muted">На указанный электронный адрес будет отправлен чек покупки.
+                            Обычно чек приходит в течение 3-х минут.</p>
+                        <div>
+                            <label>Email</label>
+                            <input type="email" class="w-100 form-control" name="cc_email" placeholder="email@email.com"
+                                form="dealPaymentForm">
+                        </div>
+                    </div>
+                </div>
+                <div class="fomr-group row justify-content-end mb-4">
+                    <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                        <a href="#" class="w-100 btn btn-sm btn-secondary mr-3" data-dismiss="modal">Отменить</a>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        {'!AjaxForm'|snippet:[
+                        'snippet' => 'SafeDeal',
+                        'action' => 'deal/pay',
+                        'hash' => $.get.d,
+                        'form' => 'safedeal.deal.actions.form',
+                        'form_id' => 'dealPaymentForm',
+                        'btn_text' => 'Оплатить',
+                        'btn_class' => 'w-100 btn btn-sm btn-primary',
+                        'successModalID' => 'modalSuccessPaymentDeal',
+                        'errorModalID' => 'modalErrorPaymentDeal',
+                        'dealResourceID' => 26,
+                        'emailTPL' => 'safedeal.deal.pay.email',
+                        'emailSubject' => $_modx->config.site_name~': Сделка оплачена!',
+                        ]}
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer align-items-start justify-content-start">
+                <p class="text-small text-muted mb-4">Наши системы имеют сертификат PCI DSS, данные хранятся в
+                    зашифрованном виде, фрод-мониторинг обеспечивают надежный контроль над операциями.</p>
+                <img class="maxw-100 mb-3" src="assets/theme/imgs/pay_icons.png" alt="">
+                <img class="maxw-100" src="assets/theme/imgs/cards.svg" alt="">
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade js-hidden-refresh" id="modalErrorPayDeal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalPaymentHoldDeal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header d-block text-center">
-                <h5 class="modal-title">В данный момент Вы не можете оплатить эту сделку!</h5>
-                <p class="mb-0">Обновите страницу и попробуйте еще раз.</p>
+                <h5 class="modal-title">Платеж в обработке!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/mail_sent.svg" alt="">
+            <div class="modal-body text-center">
+                <div class="loader mb-5"></div>
+                <p class="text-center text-blue">Подождите!</p>
+                <p class="text-center text-medium text-muted">Ваш платеж обрабатывается!</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade js-hidden-refresh" id="modalSuccessPaymentDeal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Успешно!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center pb-4">
+                <img class="maxw-100 mb-5" src="{$_modx->config.assets_url}theme/imgs/success_pay.svg" alt="">
+                <p class="text-center text-blue">Оплата прошла!</p>
+                <p class="text-center text-medium text-muted">Участник сделки получит уведомление</p>
+                <div class="text-center">
+                    <button class="btn btn-sm btn-primary" type="button" data-dismiss="modal"
+                        aria-label="Close">Понятно</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade js-hidden-refresh" id="modalErrorPaymentDeal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block text-center">
+                <h5 class="modal-title">Ошибка!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center pb-4">
+                <img class="maxw-100 mb-4" src="{$_modx->config.assets_url}theme/imgs/error_pay.svg" alt="">
+                <p class="text-red mb-1">Подождите!</p>
+                <p class="text-red">Попробуйте повторить позднее.</p>
+                <p class="text-medium text-muted">Транзакция не разрешена банком-эмитентом. Для решения этого вопроса,
+                    вам стоит позвонить в свой банк. Телефон указан на самой карте. Обычно с обратной стороны.</p>
+                <div class="text-center">
+                    <button class="btn btn-sm btn-primary" type="button" data-dismiss="modal"
+                        aria-label="Close">Понятно</button>
+                </div>
             </div>
         </div>
     </div>
@@ -311,7 +431,7 @@
                     <div class="col-6 px-0 form-group mb-4">
                         <label>Срок сделки</label>
                         <input type="text" class="w-100 datepicker today-min" placeholder="30/10/2022" name="deadline"
-                            form="dealExtensionForm" value="{$deadline|date_format : '%d/%m/%Y'}" >
+                            form="dealExtensionForm" value="{$deadline|date_format : '%d/%m/%Y'}">
                     </div>
                 </div>
                 <p>В случае согласия Вашего партнера - срок сделки будет изменен<br>
@@ -430,7 +550,8 @@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <button type="button" class="btn btn-primary" data-dismiss="modal" aria-label="Close">Получить деньги</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" aria-label="Close">Получить
+                    деньги</button>
                 <img class="maxw-100" src="{$_modx->config.assets_url}theme/imgs/dispute_success.svg" alt="">
             </div>
         </div>

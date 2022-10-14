@@ -9,11 +9,15 @@ if (!$transport->xpdo || !($transport instanceof xPDOTransport)) {
 $modx =& $transport->xpdo;
 $packages = [
     'Ace' => [
-        'version' => '1.6.5-pl',
+        'version' => '',
         'service_url' => 'modstore.pro',
     ],
     'pdoTools' => [
-        'version' => '2.10.0-pl',
+        'version' => '',
+        'service_url' => 'modstore.pro',
+    ],
+    'AjaxForm' => [
+        'version' => '',
         'service_url' => 'modstore.pro',
     ],
 ];

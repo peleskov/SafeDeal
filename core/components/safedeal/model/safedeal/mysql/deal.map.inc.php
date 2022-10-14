@@ -1,5 +1,5 @@
 <?php
-$xpdo_meta_map['SafeDeal']= array (
+$xpdo_meta_map['Deal']= array (
   'package' => 'safedeal',
   'version' => '1.1',
   'table' => 'safedeal',
@@ -19,8 +19,7 @@ $xpdo_meta_map['SafeDeal']= array (
     'description' => NULL,
     'status' => 1,
     'payment_id' => 0,
-    'payment_total' => 0.0,
-    'funds_withdrawn' => 0,
+    'paid_amount' => 0.0,
     'price' => 0.0,
     'fee' => 0.0,
     'deadline' => NULL,
@@ -97,20 +96,12 @@ $xpdo_meta_map['SafeDeal']= array (
       'null' => false,
       'default' => 0,
     ),
-    'payment_total' => 
+    'paid_amount' => 
     array (
       'dbtype' => 'float',
       'phptype' => 'float',
       'null' => false,
       'default' => 0.0,
-    ),
-    'funds_withdrawn' => 
-    array (
-      'dbtype' => 'int',
-      'precision' => '1',
-      'phptype' => 'integer',
-      'null' => false,
-      'default' => 0,
     ),
     'price' => 
     array (

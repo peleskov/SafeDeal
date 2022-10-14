@@ -161,6 +161,8 @@ class SafeDealPackage
             $setting->fromArray(array_merge([
                 'key' => $this->config['name_lower'] . '_' . $name,
                 'namespace' => $this->config['name_lower'],
+                'name' => 'setting_' . $this->config['name_lower'] . '_' . $name,
+                'description' => 'setting_' . $this->config['name_lower'] . '_' . $name . '_desc',
             ], $data), '', true, true);
             $vehicle = $this->builder->createVehicle($setting, $attributes);
             $this->builder->putVehicle($vehicle);

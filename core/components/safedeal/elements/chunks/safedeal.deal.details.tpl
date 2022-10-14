@@ -32,6 +32,7 @@
         {/switch}
     </div>
 </div>
+{if $docs}
 <div class="row">
     <div class="col">
         <p>Прикрепленные файлы:</p>
@@ -41,7 +42,8 @@
             {/foreach}
         </ul>
     </div>
-</div>    
+</div>   
+{/if} 
 <div class="row">
     <div class="col-12 col-xl-9 d-flex flex-wrap px-0">
         <div class="col-6 col-xl-4 mb-4">

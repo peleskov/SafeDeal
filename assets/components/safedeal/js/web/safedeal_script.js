@@ -1,4 +1,45 @@
 $(document).ready(() => {
+    /* Если есть action */
+    url = new URL(location);
+    searchParams = new URLSearchParams(url.search.replace('&amp;', '&'));
+    if (searchParams.has('action')) {
+        switch (searchParams.get('action')) {
+            case 'success':
+                $('#modalSuccessPaymentDeal').modal('show');
+                break;
+            case 'failure':
+                $('#modalErrorPaymentDeal').modal('show');
+                break;
+            case 'processing':
+                if (searchParams.has('d')) {
+                    $('#modalPaymentHoldDeal').modal('show');
+                    flag = 0
+                    let checkPay = function checkPay() {
+                        $.post("assets/components/safedeal/payment/check_pay.php", { hash: searchParams.get('d') })
+                            .always((data) => {
+                                let res = $.parseJSON(data);
+                                if (res.result) {
+                                    $('.modal').modal('hide');
+                                    setTimeout(() => { $('#modalSuccessPaymentDeal').modal('show') }, 1000)
+
+                                } else if (flag < 5) {
+                                    flag++
+                                    setTimeout(() => { checkPay() }, 5000)
+                                } else {
+                                    $('.modal').modal('hide');
+                                    setTimeout(() => { $('#modalErrorPaymentDeal').modal('show') }, 1000)
+                                }
+                            })
+                    }
+                    setTimeout(() => { checkPay() }, 5000)
+                }
+                break;
+
+        }
+
+    }
+    /* Если есть action */
+
     /* Удалить документ из сделки */
     $('.js-remove-doc').on('click', function (e) {
         let doc_ids = $('[name="doc_ids"]').val().split(',');
@@ -12,7 +53,7 @@ $(document).ready(() => {
     /* Удалить документ из сделки */
     /* Обновить страницу при закрытии попап */
     $('.js-hidden-refresh').on('hidden.bs.modal', function (e) {
-        location.href = location.href;
+        location.search = new URLSearchParams(Array.from(searchParams).filter(item => !['action', 'id', 'payment_id'].includes(item[0]))).toString()
     })
     /* Обновить страницу при закрытии попап */
     /* Расчет комиссии при создании сделки */

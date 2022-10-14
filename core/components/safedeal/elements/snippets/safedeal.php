@@ -633,10 +633,6 @@ switch ($scriptProperties['action']) {
             $info = curl_getinfo($ch);
             curl_close($ch);
 
-            $modx->log(1, '-1-');
-            $modx->log(1, $response);
-
-
             if ($info['http_code'] == 200) {
                 $result = json_decode($response, true);
                 if ($result['status'] == 'STATUS_PAID' && $result['amount'] == (($deal->get('price') + $deal->get('fee')) * 100)) {
@@ -720,9 +716,6 @@ switch ($scriptProperties['action']) {
                 $info = curl_getinfo($ch);
                 curl_close($ch);
 
-                $modx->log(1, '-2-');
-                $modx->log(1, $response);
-
                 if (in_array($info['http_code'], ['200', '201'])) {
                     $deal->set('payment_id', $result['id']);
                     $deal->set('updated', time());
@@ -769,11 +762,6 @@ switch ($scriptProperties['action']) {
                 }
                 $info = curl_getinfo($ch);
                 curl_close($ch);
-
-                $modx->log(1, '-3-');
-                $modx->log(1, $response);
-                $modx->log(1, print_r($result, 1));
-                $modx->log(1, print_r($info, 1));
 
                 if (in_array($info['http_code'], ['200', '201'])) {
                     $data['location'] = $result['url'];

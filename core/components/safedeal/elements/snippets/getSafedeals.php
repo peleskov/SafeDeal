@@ -181,5 +181,30 @@ switch ($action) {
         return $output;
 
         break;
+    case 'deal/notices':
+        /* Пример сниппета
+                {'!getSafedeals'|snippet:[
+                    'action' => 'deal/notices',
+                    'limit' => 100,
+                    'where' => '{"user_id":2,"active":1}'
+                ]|print}
+            */
+        $user = $modx->getUser();
+        $where = $modx->fromJSON($modx->getOption('where', $scriptProperties, ''));
+        $limit = $modx->getOption('limit', $scriptProperties, 1000);
+
+
+        $q = $modx->newQuery('DealNotice');
+        $q->where($where);
+        $q->limit($limit);
+        $q->prepare();
+        $notices = $modx->getCollection('DealNotice', $q);
+        $out = [];
+        foreach ($notices as $k => $notice) {
+            $out[] = $notice->toArray();
+        }
+        return $out;
+
+        break;
 }
 return false;

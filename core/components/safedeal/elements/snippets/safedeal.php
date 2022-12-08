@@ -867,6 +867,18 @@ switch ($scriptProperties['action']) {
             }
         }
         break;
+    case 'notice/remove':
+        $notify = false;
+        if (empty($_POST['id']) || !(int) $_POST['id'] > 0) {
+            $errors['notice'] = 'Notice ID not correct!';
+        }
+        if (!$notice = $modx->getObject('DealNotice', (int) $_POST['id'])) {
+            $errors['notice'] = 'Notice ID not found!';
+        }
+        if (!$notice->remove()) {
+            $errors['notice'] = 'Notice can not remove!';
+        }
+        break;
     default:
         $errors['default'] = 'Action undefined';
 }

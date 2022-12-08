@@ -620,6 +620,7 @@ switch ($scriptProperties['action']) {
         }
         $apiKey = $modx->getOption('safedeal_merchant_apikey');
         $payment_id = $deal->get('payment_id');
+        $result = array('status' => '');
         if (empty($errors) && $payment_id > 0) {
             /* Проверим есть ли инвойс на оплату этой сделки и если он уже оплачен сменим статус сделки*/
             $url = trim($modx->getOption('safedeal_merchant_host'), '/') . '/' . trim($modx->getOption('safedeal_merchant_invoice_url'), '/') . '?order_id=' . $deal->get('id') . '&id=' . $payment_id;
@@ -668,11 +669,13 @@ switch ($scriptProperties['action']) {
                 } elseif (!in_array($result['status'], ['STATUS_EXPIRED', 'STATUS_INIT'])) {
                     $errors['payment'] = 'При обработке платежа произошла ошибка, для уточнения деталей обратитесь к Администрации сайта.';
                 }
+            } else {
+                $errors['merchant'] = 'Error in server response! Code response: ' . $info['http_code'];
             }
         }
-        /* Инвойс просрочен сделаем новый */
+        /* Инвойс просрочен или его еще нет сделаем новый */
         if (empty($errors)) {
-            if (isset($result['status']) && $result['status'] == 'STATUS_EXPIRED') {
+            if ((isset($result['status']) && $result['status'] == 'STATUS_EXPIRED') || $payment_id == 0) {
                 $requestParams = array(
                     'order_id' => $deal->get('id'),
                     'amount' => (int) (($deal->get('price') + $deal->get('fee')) * 100),
@@ -725,6 +728,8 @@ switch ($scriptProperties['action']) {
                     } else {
                         $errors['deal'] = 'Can not save a deal!';
                     }
+                } else {
+                    $errors['merchant'] = 'Error in server response! Code response: ' . $info['http_code'];
                 }
             }
         }
@@ -767,7 +772,7 @@ switch ($scriptProperties['action']) {
                     $data['location'] = $result['url'];
                     $notify = false;
                 } else {
-                    $errors['merchant'] = 'Error! ' . print_r($result, 1);
+                    $errors['merchant'] = 'Error in server response! Code response: ' . $info['http_code'];
                 }
             }
         }

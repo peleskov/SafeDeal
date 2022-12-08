@@ -11,7 +11,7 @@ if (!defined('MODX_CORE_PATH')) {
 return [
     'name' => 'SafeDeal',
     'name_lower' => 'safedeal',
-    'version' => '1.0.8',
+    'version' => '1.0.10',
     'release' => 'pl',
     // Install package to site right after build
     'install' => true,

@@ -125,7 +125,7 @@ switch ($scriptProperties['action']) {
                     }
                 }
             }
-            $hash = hash('sha256', time() . $user_id . $_POST['is_customer'] . $_POST['is_company'] . $_POST['company_name'] . $_POST['fee_payer'] . $_POST['fee_payer'] . $_POST['title'] . $_POST['description'] . $_POST['price'] . strtotime($_POST['deadline']) . rand());
+            $hash = hash('sha256', time() . $user_id . $_POST['is_customer'] . $_POST['title'] . $_POST['description'] . $_POST['price'] . strtotime($_POST['deadline']) . rand());
             $data['hash_link'] = $modx->makeUrl($scriptProperties['dealResourceID'], '', array('d' => $hash), 'full');
             $deadline_post = str_replace('.', '/', $_POST['deadline']);
             $deadline =  DateTime::createFromFormat('d/m/Y H:i:s',  "$deadline_post 00:00:00");

@@ -41,6 +41,7 @@ switch ($action) {
                     if ($executor = $modx->getObject('modUser', $executor_id)) {
                         $executor_prfl = $executor->getOne('Profile');
                         $executor_name = $executor_prfl->get('fullname');
+                        $executor_phone = $executor_prfl->get('fullname');
                     }
                 } else {
                     $executor_id = $deal->get('author_id');
@@ -56,23 +57,13 @@ switch ($action) {
                     }
                 }
 
-                $item = array_merge(array(
-                    'id' => $deal->get('id'),
-                    'author_id' => $deal->get('author_id'),
+                $item = array_merge($deal->toArray(), array(
                     'customer_id' => $customer_id,
                     'executor_id' => $executor_id,
                     'customer_name' => $customer_name,
                     'executor_name' => $executor_name,
-                    'title' => $deal->get('title'),
-                    'description' => $deal->get('description'),
                     'description_html' => $description_html,
-                    'status' => $deal->get('status'),
-                    'price' => $deal->get('price'),
-                    'fee' => $deal->get('fee'),
-                    'funds_withdrawn' => $deal->get('funds_withdrawn'),
-                    'deadline' => $deal->get('deadline'),
                     'docs' => json_decode($deal->get('docs'), true),
-                    'tmp_deadline' => $deal->get('tmp_deadline'),
                 ), $scriptProperties);
                 $items[] = empty($tpl)
                     ? $pdoFetch->getChunk('', $item)
@@ -94,7 +85,8 @@ switch ($action) {
         break;
     case 'deal/list':
         $user = $modx->getUser();
-        $where = array(
+        $where = json_decode($modx->getOption('where', $scriptProperties, '{}'), true);
+        $where[] =
             array(
                 array(
                     'author_id' => $user->id,
@@ -102,8 +94,7 @@ switch ($action) {
                 array(
                     'OR:partner_id:=' => $user->id,
                 )
-            )
-        );
+            );
 
         if ($scriptProperties['archive'] == 1) {
             $where[] = array('status' => '6');
@@ -142,41 +133,48 @@ switch ($action) {
         $items = array();
         $idx = 0;
         $prices = [];
-        foreach ($deals as $k => $deal) {
-            $idx += 1;
-            $prices[] = $deal->get('price');
-            if ($deal->get('is_customer') == 1) {
-                $customer_id = $deal->get('author_id');
-            } else {
-                $customer_id = $deal->get('partner_id');
+        if (isset($returnIDs)) {
+            $output = [];
+            foreach ($deals as $k => $deal) {
+                array_push($output, $deal->get('id'));
             }
-
-            $item = array_merge(array(
-                'id' => $deal->get('id'),
-                'idx' => $idx,
-                'title' => $deal->get('title'),
-                'price' => $deal->get('price'),
-                'deadline' => $deal->get('deadline'),
-                'status' => $deal->get('status'),
-                'customer_id' => $customer_id,
-                'hash' => $deal->get('hash'),
-            ), $scriptProperties);
-            $items[] = empty($tpl)
-                ? '<pre>' . $pdoFetch->getChunk('', $item) . '</pre>'
-                : $pdoFetch->getChunk($tpl, $item);
-        }
-        if (count($items) > 0) {
-            $output = array_merge(array('wrapper' => implode($outputSeparator, $items), 'range_price' => '[ ' . min($prices) . ',' . max($prices) . ' ]'), $scriptProperties);
-            $output = empty($tplOut)
-                ? $pdoFetch->getChunk('', $items)
-                : $pdoFetch->getChunk($tplOut, $output);
+        } elseif (isset($returnAdvertIDs)) {
+            $output = [];
+            foreach ($deals as $k => $deal) {
+                array_push($output, $deal->get('advert_id'));
+            }
         } else {
-            $empty = empty($tplEmpty)
-                ? '<p>Result empty!</p>'
-                : $pdoFetch->getChunk($tplEmpty);
-            $output = empty($tplOut)
-                ? $pdoFetch->getChunk('', $empty)
-                : $pdoFetch->getChunk($tplOut, array('wrapper' => $empty));
+            foreach ($deals as $k => $deal) {
+                $idx += 1;
+                $prices[] = $deal->get('price');
+                if ($deal->get('is_customer') == 1) {
+                    $customer_id = $deal->get('author_id');
+                } else {
+                    $customer_id = $deal->get('partner_id');
+                }
+
+                $item = array_merge(array(
+                    'id' => $deal->get('id'),
+                    'idx' => $idx,
+                    'title' => $deal->get('title'),
+                    'price' => $deal->get('price'),
+                    'deadline' => $deal->get('deadline'),
+                    'status' => $deal->get('status'),
+                    'customer_id' => $customer_id,
+                    'hash' => $deal->get('hash'),
+                    'advert_id' => $deal->get('advert_id'),
+                    'extended' => $deal->get('extended'),
+                ), $scriptProperties);
+                $items[] = empty($tpl)
+                    ? '<pre>' . $pdoFetch->getChunk('', $item) . '</pre>'
+                    : $pdoFetch->getChunk($tpl, $item);
+            }
+            if (count($items) > 0) {
+                $output = array_merge(array('wrapper' => implode($outputSeparator, $items), 'range_price' => '[ ' . min($prices) . ',' . max($prices) . ' ]'), $scriptProperties);
+                $output = empty($tplOut)
+                    ? $pdoFetch->getChunk('', $items)
+                    : $pdoFetch->getChunk($tplOut, $output);
+            }
         }
         return $output;
 

@@ -14,6 +14,7 @@ $xpdo_meta_map['Deal']= array (
     'updated' => NULL,
     'author_id' => 0,
     'partner_id' => 0,
+    'advert_id' => 0,
     'is_customer' => 1,
     'title' => NULL,
     'description' => NULL,
@@ -26,6 +27,7 @@ $xpdo_meta_map['Deal']= array (
     'tmp_deadline' => 0,
     'hash' => NULL,
     'docs' => '',
+    'extended' => '',
   ),
   'fieldMeta' => 
   array (
@@ -52,6 +54,14 @@ $xpdo_meta_map['Deal']= array (
       'default' => 0,
     ),
     'partner_id' => 
+    array (
+      'dbtype' => 'int',
+      'precision' => '10',
+      'phptype' => 'integer',
+      'null' => false,
+      'default' => 0,
+    ),
+    'advert_id' => 
     array (
       'dbtype' => 'int',
       'precision' => '10',
@@ -144,6 +154,13 @@ $xpdo_meta_map['Deal']= array (
       'dbtype' => 'text',
       'phptype' => 'string',
       'null' => false,
+      'default' => '',
+    ),
+    'extended' => 
+    array (
+      'dbtype' => 'text',
+      'phptype' => 'string',
+      'null' => true,
       'default' => '',
     ),
   ),

@@ -29,6 +29,8 @@ $data = ['service' => 'safedeal'];
     1 => 'Предложена / Ожидает подтверждения партнера',
     2 => 'Подтверждена партнером / Ожидает оплаты',
     3 => 'Оплачена / В работе',
+    31 => 'В работе / Забираю посылку',
+    32 => 'В работе / В пути на адрес доставки',
     4 => 'Продление / Ожидает согласования',
     5 => 'Завершена / Ожидает согласия заказчика',
     6 => 'Закрыта / Ожидает выплаты исполнителю / Архив',
@@ -140,6 +142,9 @@ switch ($scriptProperties['action']) {
             if (!empty($_POST['partner_id'])) {
                 $deal->set('partner_id', (int) $_POST['partner_id']);
             }
+            if (!empty($_POST['advert_id'])) {
+                $deal->set('advert_id', (int) $_POST['advert_id']);
+            }
             $deal->set('description', strip_tags($_POST['description']));
             $deal->set('status', 0);
             $deal->set('price', $price);
@@ -147,6 +152,13 @@ switch ($scriptProperties['action']) {
             $deal->set('deadline', $deadline->getTimestamp());
             $deal->set('hash', $hash);
             $deal->set('docs', json_encode($new_docs, true));
+            if (isset($_POST['extended'])) {
+                if (is_array($_POST['extended'])) {
+                    $deal->set('extended', json_encode($_POST['extended'], true));
+                } else {
+                    $deal->set('extended', strip_tags($_POST['extended']));
+                }
+            }
             if ($deal->save()) {
                 $notice = $modx->newObject('DealNotice');
                 $notice->set('created', time());
@@ -358,6 +370,55 @@ switch ($scriptProperties['action']) {
             }
         }
         /* Change deal */
+        break;
+    case 'deal/setstatus':
+        if (empty($scriptProperties['status'])) {
+            $errors['status'] = $modx->lexicon('formit.field_required');
+        }
+        if (empty($scriptProperties['hash'])) {
+            $errors['hash'] = $modx->lexicon('formit.field_required');
+        }
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+
+        /* Set status deal */
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
+                $deal->set('status', $scriptProperties['status']);
+                if ($deal->save()) {
+                    $notice = $modx->newObject('DealNotice');
+                    $notice->set('created', time());
+                    $notice->set('user_id', $user_id);
+                    $notice->set('is_customer', $deal->get('is_customer'));
+                    $notice->set('action', 3);
+                    $notice->set('deal_id', $deal->get('id'));
+                    $notice->set('hash', $deal->get('hash'));
+                    $notice->save();
+                    if ($deal->get('partner_id') > 0) {
+                        $notice = $modx->newObject('DealNotice');
+                        $notice->set('created', time());
+                        $notice->set('user_id', $deal->get('partner_id'));
+                        if ($deal->get('is_customer') == 1) {
+                            $notice->set('is_customer', 0);
+                        } else {
+                            $notice->set('is_customer', 1);
+                        }
+                        $notice->set('action', 3);
+                        $notice->set('deal_id', $deal->get('id'));
+                        $notice->set('hash', $deal->get('hash'));
+                        $notice->save();
+                    }
+                } else {
+                    $errors['deal'] = 'Can not save a deal!';
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        /* Set status deal */
         break;
     case 'deal/extension/request':
         foreach ($_POST as $key => $val) {
@@ -615,7 +676,7 @@ switch ($scriptProperties['action']) {
         } else {
             $errors['deal'] = 'Deal not found!';
         }
-        if ($deal->get('status') != 2) {
+        if ($deal->get('status') >= 2) {
             $errors['deal'] = 'Can not pay this deal!';
         }
         $apiKey = $modx->getOption('safedeal_merchant_apikey');
@@ -777,6 +838,97 @@ switch ($scriptProperties['action']) {
             }
         }
         break;
+    case 'deal/pay_fake':
+        $post_data = [];
+        //Проверяем поля формы
+        foreach (['cc_num', 'cc_holder', 'cc_month', 'cc_year', 'cc_cvc'] as $field) { // обязательные поля
+            if (empty($_POST[$field])) {
+                $errors[$field] = 'Это поле не может быть пустым.';
+            } else {
+                switch ($field) {
+                    case 'cc_num':
+                        $cc_card = preg_replace("/[^0-9]/", '', $_POST[$field]);
+                        if (strlen($cc_card) != 16) {
+                            $errors[$field] = 'Не верный номер карты.';
+                        }
+                        $post_data[$field] = $cc_card;
+                        break;
+                    case 'cc_month':
+                        $cc_month = preg_replace("/[^0-9]/", '', $_POST[$field]);
+                        if ((int) $cc_month < 1 || (int) $cc_month > 12) {
+                            $errors[$field] = 'Не верный месяц.';
+                        }
+                        $post_data[$field] = $cc_month;
+                        break;
+                    case 'cc_year':
+                        $cc_year = preg_replace("/[^0-9]/", '', $_POST[$field]);
+                        if ((int) $cc_year < date("y")) {
+                            $errors[$field] = 'Не верный год.';
+                        }
+                        $post_data[$field] = $cc_year;
+                        break;
+                    case 'cc_cvc':
+                        $cc_cvc = preg_replace("/[^0-9]/", '', $_POST[$field]);
+                        if ((int) $cc_cvc < 0 || (int) $cc_cvc > 999) {
+                            $errors[$field] = 'Не верный код.';
+                        }
+                        $post_data[$field] = $cc_cvc;
+                        break;
+                    case 'cc_holder':
+                        $post_data[$field] = strip_tags($_POST[$field]);
+                        if (preg_match("/[^a-zA-Z ]+/", $post_data[$field])) {
+                            $errors[$field] = 'Укажите Имя и Фамилию только латинскими буквами!';
+                        }
+                }
+            }
+        }
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+            $prfl = $user->getOne('Profile');
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+        if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
+        } else {
+            $errors['deal'] = 'Deal not found!';
+        }
+        if ($deal->get('status') >= 2) {
+            $errors['deal'] = 'Can not pay this deal!';
+        }
+        $result = array('status' => '');
+        if (empty($errors)) {
+            /* Сменим статус сделки для фейковой оплаты*/
+            $deal->set('status', 3);
+            $deal->set('paid_amount', $_POST['price']);
+            $deal->set('updated', time());
+            if ($deal->save()) {
+                $notice = $modx->newObject('DealNotice');
+                $notice->set('created', time());
+                $notice->set('user_id', $deal->get('author_id'));
+                $notice->set('is_customer', $deal->get('is_customer'));
+                $notice->set('action', 7);
+                $notice->set('deal_id', $deal->get('id'));
+                $notice->set('hash', $deal->get('hash'));
+                $notice->save();
+                if ($deal->get('partner_id') > 0) {
+                    $notice = $modx->newObject('DealNotice');
+                    $notice->set('created', time());
+                    $notice->set('user_id', $deal->get('partner_id'));
+                    if ($deal->get('is_customer') == 1) {
+                        $notice->set('is_customer', 0);
+                    } else {
+                        $notice->set('is_customer', 1);
+                    }
+                    $notice->set('action', 7);
+                    $notice->set('deal_id', $deal->get('id'));
+                    $notice->set('hash', $deal->get('hash'));
+                    $notice->save();
+                }
+            } else {
+                $errors['deal'] = 'Can not save a deal!';
+            }
+        }
+        break;
     case 'deal/complete':
         if ($user = $modx->getUser()) {
             $user_id = $user->id;
@@ -785,37 +937,33 @@ switch ($scriptProperties['action']) {
         }
         if (empty($errors)) {
             if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
-                if ($deal->get('status') == 3) {
-                    $deal->set('status', 5);
-                    $deal->set('updated', time());
-                    if ($deal->save()) {
+                $deal->set('status', 5);
+                $deal->set('updated', time());
+                if ($deal->save()) {
+                    $notice = $modx->newObject('DealNotice');
+                    $notice->set('created', time());
+                    $notice->set('user_id', $user_id);
+                    $notice->set('is_customer', $deal->get('is_customer'));
+                    $notice->set('action', 8);
+                    $notice->set('deal_id', $deal->get('id'));
+                    $notice->set('hash', $deal->get('hash'));
+                    $notice->save();
+                    if ($deal->get('partner_id') > 0) {
                         $notice = $modx->newObject('DealNotice');
                         $notice->set('created', time());
-                        $notice->set('user_id', $user_id);
-                        $notice->set('is_customer', $deal->get('is_customer'));
+                        $notice->set('user_id', $deal->get('partner_id'));
+                        if ($deal->get('is_customer') == 1) {
+                            $notice->set('is_customer', 0);
+                        } else {
+                            $notice->set('is_customer', 1);
+                        }
                         $notice->set('action', 8);
                         $notice->set('deal_id', $deal->get('id'));
                         $notice->set('hash', $deal->get('hash'));
                         $notice->save();
-                        if ($deal->get('partner_id') > 0) {
-                            $notice = $modx->newObject('DealNotice');
-                            $notice->set('created', time());
-                            $notice->set('user_id', $deal->get('partner_id'));
-                            if ($deal->get('is_customer') == 1) {
-                                $notice->set('is_customer', 0);
-                            } else {
-                                $notice->set('is_customer', 1);
-                            }
-                            $notice->set('action', 8);
-                            $notice->set('deal_id', $deal->get('id'));
-                            $notice->set('hash', $deal->get('hash'));
-                            $notice->save();
-                        }
-                    } else {
-                        $errors['deal'] = 'Can not save a deal!';
                     }
                 } else {
-                    $errors['deal'] = 'Can not complete this deal!';
+                    $errors['deal'] = 'Can not save a deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
@@ -830,37 +978,33 @@ switch ($scriptProperties['action']) {
         }
         if (empty($errors)) {
             if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
-                if ($deal->get('status') == 5) {
-                    $deal->set('status', 6);
-                    $deal->set('updated', time());
-                    if ($deal->save()) {
+                $deal->set('status', 6);
+                $deal->set('updated', time());
+                if ($deal->save()) {
+                    $notice = $modx->newObject('DealNotice');
+                    $notice->set('created', time());
+                    $notice->set('user_id', $user_id);
+                    $notice->set('is_customer', $deal->get('is_customer'));
+                    $notice->set('action', 9);
+                    $notice->set('deal_id', $deal->get('id'));
+                    $notice->set('hash', $deal->get('hash'));
+                    $notice->save();
+                    if ($deal->get('partner_id') > 0) {
                         $notice = $modx->newObject('DealNotice');
                         $notice->set('created', time());
-                        $notice->set('user_id', $user_id);
-                        $notice->set('is_customer', $deal->get('is_customer'));
+                        $notice->set('user_id', $deal->get('partner_id'));
+                        if ($deal->get('is_customer') == 1) {
+                            $notice->set('is_customer', 0);
+                        } else {
+                            $notice->set('is_customer', 1);
+                        }
                         $notice->set('action', 9);
                         $notice->set('deal_id', $deal->get('id'));
                         $notice->set('hash', $deal->get('hash'));
                         $notice->save();
-                        if ($deal->get('partner_id') > 0) {
-                            $notice = $modx->newObject('DealNotice');
-                            $notice->set('created', time());
-                            $notice->set('user_id', $deal->get('partner_id'));
-                            if ($deal->get('is_customer') == 1) {
-                                $notice->set('is_customer', 0);
-                            } else {
-                                $notice->set('is_customer', 1);
-                            }
-                            $notice->set('action', 9);
-                            $notice->set('deal_id', $deal->get('id'));
-                            $notice->set('hash', $deal->get('hash'));
-                            $notice->save();
-                        }
-                    } else {
-                        $errors['deal'] = 'Can not save a deal!';
                     }
                 } else {
-                    $errors['deal'] = 'Can not complete this deal!';
+                    $errors['deal'] = 'Can not save a deal!';
                 }
             } else {
                 $errors['deal'] = 'Deal not found!';
@@ -961,7 +1105,7 @@ if (empty($errors)) {
             $modx->mail->reset();
         }
     }
-    return $AjaxForm->success('', array_merge($data, array('result' => true, 'message' => $scriptProperties['successMsg'], 'modalID' => $scriptProperties['successModalID'])));
+    return $AjaxForm->success('', array_merge($data, array('result' => true, 'message' => $scriptProperties['successMsg'], 'modalID' => $scriptProperties['successModalID'], 'location' => $modx->makeUrl($redirectID))));
 } else {
     return $AjaxForm->error('', array_merge($data, array('result' => false, 'message' => $scriptProperties['errorMsg'], 'modalID' => $scriptProperties['errorModalID'], 'errors' => $errors)));
 }

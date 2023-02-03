@@ -6,6 +6,7 @@
         <field key="updated" dbtype="int" precision="10" phptype="integer" null="true" />
         <field key="author_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
         <field key="partner_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="advert_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
         <field key="is_customer" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="1" />
         <field key="title" dbtype="varchar" precision="191" phptype="string" null="true" />
         <field key="description" dbtype="mediumtext" phptype="string" null="true" />
@@ -18,6 +19,7 @@
         <field key="tmp_deadline" dbtype="int" precision="10" phptype="integer" null="true" default="0" />
         <field key="hash" dbtype="varchar" precision="256" phptype="string" null="true" />
         <field key="docs" dbtype="text" phptype="string" null="false" default=""/>
+        <field key="extended" dbtype="text" phptype="string" null="true" default=""/>
     </object>
 
     <object class="DealNotice" table="safedeal_notice" extends="xPDOSimpleObject">

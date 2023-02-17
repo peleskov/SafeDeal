@@ -388,6 +388,7 @@ switch ($scriptProperties['action']) {
         if (empty($errors)) {
             if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
                 $deal->set('status', $scriptProperties['status']);
+                $deal->set('updated', time());
                 if ($deal->save()) {
                     $notice = $modx->newObject('DealNotice');
                     $notice->set('created', time());
@@ -419,6 +420,32 @@ switch ($scriptProperties['action']) {
             }
         }
         /* Set status deal */
+        break;
+    case 'deal/archive':
+        if (empty($scriptProperties['hash'])) {
+            $errors['hash'] = $modx->lexicon('formit.field_required');
+        }
+        if ($user = $modx->getUser()) {
+            $user_id = $user->id;
+        } else {
+            $errors['user_id'] = 'User ID not found!';
+        }
+
+        /* deal archived */
+        if (empty($errors)) {
+            if ($deal = $modx->getObject('Deal', array('hash' => $scriptProperties['hash']))) {
+                if (!$modx->getObject('DealArchive', array('deal_id'=> $deal->get('id'), 'user_id'=> $user_id))) {
+                    $arc = $modx->newObject('DealArchive');
+                    $arc->set('deal_id', $deal->get('id'));
+                    $arc->set('user_id', $user_id);
+                    $arc->save();
+                    $notify = false;
+                }
+            } else {
+                $errors['deal'] = 'Deal not found!';
+            }
+        }
+        /* deal archived */
         break;
     case 'deal/extension/request':
         foreach ($_POST as $key => $val) {
@@ -493,6 +520,17 @@ switch ($scriptProperties['action']) {
                     $deal->set('status', 3);
                     $deal->set('updated', time());
                     if ($deal->save()) {
+                        if ($deal->get('advert_id') > 0){
+                            $AdvertBoard = $modx->getService('AdvertBoard', 'AdvertBoard', MODX_CORE_PATH . 'components/advertboard/model/', $scriptProperties);
+                            if (!$AdvertBoard) {
+                                return 'Could not load AdvertBoard class!';
+                            }                    
+                            if ($advert = $modx->getObject('Advert', array('id' => $deal->get('advert_id')))) {
+                                $advert->set('status', 1);   
+                                $advert->save();   
+                            }
+                        }
+                        
                         $notice = $modx->newObject('DealNotice');
                         $notice->set('created', time());
                         $notice->set('user_id', $user_id);
@@ -540,6 +578,17 @@ switch ($scriptProperties['action']) {
                     $deal->set('status', 3);
                     $deal->set('updated', time());
                     if ($deal->save()) {
+                        if ($deal->get('advert_id') > 0){
+                            $AdvertBoard = $modx->getService('AdvertBoard', 'AdvertBoard', MODX_CORE_PATH . 'components/advertboard/model/', $scriptProperties);
+                            if (!$AdvertBoard) {
+                                return 'Could not load AdvertBoard class!';
+                            }                    
+                            if ($advert = $modx->getObject('Advert', array('id' => $deal->get('advert_id')))) {
+                                $advert->set('status', 1);   
+                                $advert->save();   
+                            }
+                        }
+                        
                         $notice = $modx->newObject('DealNotice');
                         $notice->set('created', time());
                         $notice->set('user_id', $user_id);
@@ -702,6 +751,17 @@ switch ($scriptProperties['action']) {
                     $deal->set('paid_amount', $result['amount']);
                     $deal->set('updated', time());
                     if ($deal->save()) {
+                        if ($deal->get('advert_id') > 0){
+                            $AdvertBoard = $modx->getService('AdvertBoard', 'AdvertBoard', MODX_CORE_PATH . 'components/advertboard/model/', $scriptProperties);
+                            if (!$AdvertBoard) {
+                                return 'Could not load AdvertBoard class!';
+                            }                    
+                            if ($advert = $modx->getObject('Advert', array('id' => $deal->get('advert_id')))) {
+                                $advert->set('status', 1);   
+                                $advert->save();   
+                            }
+                        }
+                    
                         $notice = $modx->newObject('DealNotice');
                         $notice->set('created', time());
                         $notice->set('user_id', $user_id);
@@ -902,6 +962,16 @@ switch ($scriptProperties['action']) {
             $deal->set('paid_amount', $_POST['price']);
             $deal->set('updated', time());
             if ($deal->save()) {
+                if ($deal->get('advert_id') > 0){
+                    $AdvertBoard = $modx->getService('AdvertBoard', 'AdvertBoard', MODX_CORE_PATH . 'components/advertboard/model/', $scriptProperties);
+                    if (!$AdvertBoard) {
+                        return 'Could not load AdvertBoard class!';
+                    }                    
+                    if ($advert = $modx->getObject('Advert', array('id' => $deal->get('advert_id')))) {
+                        $advert->set('status', 1);   
+                        $advert->save();   
+                    }
+                }
                 $notice = $modx->newObject('DealNotice');
                 $notice->set('created', time());
                 $notice->set('user_id', $deal->get('author_id'));

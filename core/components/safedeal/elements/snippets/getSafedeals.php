@@ -56,7 +56,12 @@ switch ($action) {
                         $customer_name = $customer_prfl->get('fullname');
                     }
                 }
-
+                $archive = [];
+                if ($arc = $modx->getCollection('DealArchive', array('deal_id' => $deal->get('id')))) {
+                    foreach ($arc as $a) {
+                        $archive[] = $a->get('user_id');
+                    }
+                }
                 $item = array_merge($deal->toArray(), array(
                     'customer_id' => $customer_id,
                     'executor_id' => $executor_id,
@@ -64,6 +69,7 @@ switch ($action) {
                     'executor_name' => $executor_name,
                     'description_html' => $description_html,
                     'docs' => json_decode($deal->get('docs'), true),
+                    'archive' => $archive,
                 ), $scriptProperties);
                 $items[] = empty($tpl)
                     ? $pdoFetch->getChunk('', $item)
@@ -96,13 +102,6 @@ switch ($action) {
                 )
             );
 
-        if ($scriptProperties['archive'] == 1) {
-            $where[] = array('status' => '6');
-        } elseif ($scriptProperties['archive'] == '-1') {
-            $where[] = array('status:!=' => '6');
-        } elseif (!empty($stts)) {
-            $where[] = array('status:IN' => explode(',', $stts));
-        }
         if (!empty($date)) {
             $deadline =  DateTime::createFromFormat('d/m/Y H:i:s', $date . ' 00:00:00');
             $where['deadline'] = $deadline->getTimestamp();
@@ -114,7 +113,30 @@ switch ($action) {
             $where['price:<='] = $max;
         }
         $q = $modx->newQuery('Deal');
+        $q->select('`Deal`.*, `DealArchive`.*');
+        if($scriptProperties['archive'] == 1) {
+            $q->leftJoin('DealArchive','DealArchive', '`Deal`.`id` = `DealArchive`.`deal_id` AND `DealArchive`.`user_id` = ' . $user->id);
+            $where['DealArchive.user_id:IS NOT'] = null;
+        } else {
+            $q->leftJoin('DealArchive','DealArchive', '`Deal`.`id` = `DealArchive`.`deal_id` AND `DealArchive`.`user_id` = ' . $user->id);
+            $where['DealArchive.user_id:IS'] = null;
+        }
         $q->where($where);
+        $query = $modx->getOption('query', $scriptProperties, '');
+        if ($query != '') {
+            $query_sanitize = $modx->sanitizeString($query);
+            $search = array();
+            $search[] = 'MATCH(`Deal`.`title`) AGAINST ("' . $query_sanitize . '" IN BOOLEAN MODE)';
+            foreach (explode(' ', $query_sanitize) as $s) {
+                if (mb_strlen($s) > 3) {
+                    $search[] = '`Deal`.`title` LIKE "%' . $s . '%"';
+                    $search[] = '`Deal`.`description` LIKE "%' . $s . '%"';
+                }
+            }
+        }        
+        if (!empty($search)) {
+            $q->where(array($search), xPDOQuery::SQL_OR);
+        }
         $total = $modx->getCount('Deal', $q);
         $totalVar = $modx->getOption('totalVar', $scriptProperties, 'total');
         $modx->setPlaceholder($totalVar, $total);
@@ -164,6 +186,7 @@ switch ($action) {
                     'hash' => $deal->get('hash'),
                     'advert_id' => $deal->get('advert_id'),
                     'extended' => $deal->get('extended'),
+                    'updated' => $deal->get('updated'),
                 ), $scriptProperties);
                 $items[] = empty($tpl)
                     ? '<pre>' . $pdoFetch->getChunk('', $item) . '</pre>'

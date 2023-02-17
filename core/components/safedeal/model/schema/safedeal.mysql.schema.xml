@@ -20,6 +20,14 @@
         <field key="hash" dbtype="varchar" precision="256" phptype="string" null="true" />
         <field key="docs" dbtype="text" phptype="string" null="false" default=""/>
         <field key="extended" dbtype="text" phptype="string" null="true" default=""/>
+
+        <index alias="dial_title_IDX" name="dial_title_IDX" primary="false" unique="false" type="FULLTEXT">
+            <column key="title" length="" collation="" null="true" />
+        </index>
+        <index alias="dial_description_IDX" name="dial_description_IDX" primary="false" unique="false" type="FULLTEXT">
+            <column key="description" length="" collation="" null="true" />
+        </index>
+
     </object>
 
     <object class="DealNotice" table="safedeal_notice" extends="xPDOSimpleObject">
@@ -32,4 +40,8 @@
         <field key="active" dbtype="int" precision="1" phptype="integer" null="false" default="1" />
     </object>
 
+    <object class="DealArchive" table="safedeal_archive" extends="xPDOSimpleObject">
+        <field key="deal_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+        <field key="user_id" dbtype="int" precision="10" phptype="integer" null="false" default="0" />
+    </object>
 </model>

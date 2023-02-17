@@ -5,5 +5,6 @@ $xpdo_meta_map = array (
   array (
     0 => 'Deal',
     1 => 'DealNotice',
+    2 => 'DealArchive',
   ),
 );

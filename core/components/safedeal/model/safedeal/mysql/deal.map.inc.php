@@ -164,4 +164,39 @@ $xpdo_meta_map['Deal']= array (
       'default' => '',
     ),
   ),
+  'indexes' => 
+  array (
+    'dial_title_IDX' => 
+    array (
+      'alias' => 'dial_title_IDX',
+      'primary' => false,
+      'unique' => false,
+      'type' => 'FULLTEXT',
+      'columns' => 
+      array (
+        'title' => 
+        array (
+          'length' => '',
+          'collation' => '',
+          'null' => true,
+        ),
+      ),
+    ),
+    'dial_description_IDX' => 
+    array (
+      'alias' => 'dial_description_IDX',
+      'primary' => false,
+      'unique' => false,
+      'type' => 'FULLTEXT',
+      'columns' => 
+      array (
+        'description' => 
+        array (
+          'length' => '',
+          'collation' => '',
+          'null' => true,
+        ),
+      ),
+    ),
+  ),
 );
